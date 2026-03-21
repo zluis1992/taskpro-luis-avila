@@ -12,12 +12,20 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=build /app/.next/standalone ./
-COPY --from=build /app/.next/static ./.next/static
+# Copy built files
 COPY --from=build /app/public ./public
+COPY --from=build /app/.next/static ./.next/static
+
+# When using standalone output, server.js is in .next/standalone/server.js
+# and we copy the content of standalone to root.
+# If Next.js nests the output because of project structure, we need to find where it is.
+# Based on previous logs, let's try to copy everything from standalone and see.
+COPY --from=build /app/.next/standalone ./
 
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# server.js is located in the root of the standalone folder
+# We use a robust way to find and run it
+CMD ["sh", "-c", "SERVER_JS=$(find . -name server.js | head -n 1); if [ -n \"$SERVER_JS\" ]; then node \"$SERVER_JS\"; else echo \"server.js not found\"; exit 1; fi"]
