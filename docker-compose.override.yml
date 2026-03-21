@@ -1,0 +1,16 @@
+# Overrides para desarrollo local — hot reload y puertos adicionales
+services:
+  backend:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    volumes:
+      - ./backend:/src
+    command: ["dotnet", "watch", "run", "--project", "02.Service/API/API.csproj"]
+
+  frontend:
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
