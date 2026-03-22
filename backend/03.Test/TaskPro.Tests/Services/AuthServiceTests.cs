@@ -66,7 +66,7 @@ public class AuthServiceTests
         // Act & Assert
         await service.Invoking(s => s.RegisterAsync(request))
             .Should().ThrowAsync<BusinessException>()
-            .WithMessage("*already registered*");
+            .WithMessage("*correo electrónico*");
     }
 
     [Fact]
@@ -86,10 +86,9 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginAsync_WithValidCredentials_ShouldReturnToken()
     {
-        // Arrange — hash SHA256 de "secret123"
+        // Arrange — hash BCrypt de "secret123"
         var password = "secret123";
-        using var sha = System.Security.Cryptography.SHA256.Create();
-        var hash = Convert.ToBase64String(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password)));
+        var hash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 4);
 
         var user = new User { Id = 1, Name = "Luis", Email = "luis@test.com", PasswordHash = hash };
         var request = new LoginRequest { Email = user.Email, Password = password };

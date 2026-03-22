@@ -6,6 +6,7 @@ import TreeView from "devextreme-react/tree-view";
 import Toolbar, {Item} from "devextreme-react/toolbar";
 import Button from "devextreme-react/button";
 import {authService} from "@/app/core/services/auth.service";
+import {versionService} from "@/app/core/services/version.service";
 
 type NavItem = {
   id: string;
@@ -22,9 +23,11 @@ export function MainLayout({children}: {children: React.ReactNode}) {
   const [menuOpened, setMenuOpened] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [appVersion, setAppVersion] = useState("v1.0.0");
 
   useEffect(() => {
     setMounted(true);
+    versionService.get().then((v) => setAppVersion(`v${v.version}`)).catch(() => {});
     const mq = window.matchMedia("(max-width: 768px)");
     const update = (mobile: boolean) => {
       setIsMobile(mobile);
@@ -154,7 +157,7 @@ export function MainLayout({children}: {children: React.ReactNode}) {
         <div className="taskpro-main">{children}</div>
         <footer className="taskpro-footer">
           <span>© 2026 TaskPro. Created with ❤️ By Luis A.</span>
-          <span className="taskpro-footer-version">v1.0.0</span>
+          <span className="taskpro-footer-version">{appVersion}</span>
         </footer>
       </div>
     </div>

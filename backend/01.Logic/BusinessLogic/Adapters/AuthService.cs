@@ -9,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace BusinessLogic.Adapters;
@@ -94,13 +93,9 @@ public class AuthService : IAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private static string HashPassword(string password)
-    {
-        using var sha256 = SHA256.Create();
-        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(bytes);
-    }
+    private static string HashPassword(string password) =>
+        BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
 
     private static bool VerifyPassword(string password, string hash) =>
-        HashPassword(password) == hash;
+        BCrypt.Net.BCrypt.Verify(password, hash);
 }

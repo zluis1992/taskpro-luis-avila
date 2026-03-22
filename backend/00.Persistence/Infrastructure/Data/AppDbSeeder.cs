@@ -1,8 +1,6 @@
 using Domain.Entity;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Infrastructure.Data;
 
@@ -21,19 +19,11 @@ public static class AppDbSeeder
                 Name = u.Name,
                 Email = u.Email,
                 Role = u.Role,
-                PasswordHash = HashPassword(u.Password)
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(u.Password, workFactor: 12)
             })
             .ToList();
 
         db.Users.AddRange(entities);
         await db.SaveChangesAsync(cancellationToken);
     }
-
-    private static string HashPassword(string password)
-    {
-        using var sha256 = SHA256.Create();
-        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(bytes);
-    }
 }
-

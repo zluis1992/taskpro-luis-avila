@@ -43,7 +43,7 @@ services:
       ConnectionStrings__SqlServer: "Server=sqlserver,1433;Database=TaskProDb;User Id=sa;Password=TaskPro@2024!;TrustServerCertificate=True;"
       ConnectionStrings__MongoDB: "mongodb://mongodb:27017"
       MongoDB__DatabaseName: "taskpro"
-      Jwt__Key: "TaskPro-Dev-SuperSecretKey-2024-MustBe32CharsMin!"
+      Jwt__Key: "${JWT_SECRET_KEY:-TaskPro-Dev-SuperSecretKey-2024-MustBe32CharsMin!}"
       Jwt__Issuer: "taskpro-api"
       Jwt__Audience: "taskpro-client"
       Jwt__ExpiresMinutes: "60"
