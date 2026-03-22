@@ -66,7 +66,7 @@ export default function TaskDetailPage() {
     setLoading(true);
     try {
       const [t, c] = await Promise.all([
-        taskService.getById(projectId, tId),
+        taskService.getById(tId),
         commentService.getByTask(tId),
       ]);
       setTask(t);
@@ -92,7 +92,7 @@ export default function TaskDetailPage() {
         dueDate: task.dueDate,
         assignedUserId: task.assignedUserId,
       };
-      await taskService.update(projectId, tId, req);
+      await taskService.update(tId, req);
       await loadData();
     } finally {
       setSavingTask(false);

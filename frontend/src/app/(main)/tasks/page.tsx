@@ -3,11 +3,20 @@
 import LoadPanel from 'devextreme-react/load-panel';
 import { useTasks } from './hooks/useTasks';
 import { TaskDataGrid } from './components/TaskDataGrid';
-import { TaskDetailPopup } from './components/TaskDetailPopup';
-import { TaskFormPopup } from './components/TaskFormPopup';
+import { TaskModal } from './components/TaskModal';
 
 export default function TasksPage() {
   const t = useTasks();
+
+  const modalMode = t.detailPopupVisible ? 'view'
+    : t.editingTask ? 'edit'
+    : 'create';
+
+  const modalVisible = t.detailPopupVisible || t.formPopupVisible;
+
+  const projectName = t.selectedDetail
+    ? (t.projectMap.get(t.selectedDetail.projectId) ?? `#${t.selectedDetail.projectId}`)
+    : '';
 
   return (
     <div>
@@ -24,25 +33,23 @@ export default function TasksPage() {
         onDelete={t.handleDelete}
       />
 
-      <TaskDetailPopup
-        visible={t.detailPopupVisible}
-        task={t.selectedDetail}
-        projectName={t.selectedDetail ? (t.projectMap.get(t.selectedDetail.projectId) ?? `#${t.selectedDetail.projectId}`) : ''}
-        onHiding={() => t.setDetailPopupVisible(false)}
-        onEdit={t.openEditTask}
-        onDelete={t.handleDelete}
-      />
-
-      <TaskFormPopup
-        visible={t.formPopupVisible}
-        isEditing={!!t.editingTask}
+      <TaskModal
+        mode={modalMode}
+        visible={modalVisible}
+        task={t.selectedDetail ?? t.editingTask}
         form={t.form}
         saving={t.saving}
         projectOptions={t.projectOptions}
         userOptions={t.userOptions}
+        projectName={projectName}
         onFormChange={t.setForm}
-        onHiding={() => t.setFormPopupVisible(false)}
+        onHiding={() => {
+          t.setDetailPopupVisible(false);
+          t.setFormPopupVisible(false);
+        }}
         onSave={t.handleSave}
+        onEdit={t.openEditTask}
+        onDelete={t.handleDelete}
       />
 
       <LoadPanel visible={t.loading && t.tasks.length === 0} />

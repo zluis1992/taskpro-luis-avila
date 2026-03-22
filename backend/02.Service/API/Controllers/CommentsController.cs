@@ -15,23 +15,23 @@ public class CommentsController : BaseController
 
     [HttpGet]
     public async Task<IActionResult> GetAll(int taskId) =>
-        Ok(await _commentService.GetByTaskAsync(taskId, CurrentUserId));
+        Success(await _commentService.GetByTaskAsync(taskId, CurrentUserId));
 
     [HttpPost]
     public async Task<IActionResult> Create(int taskId, [FromBody] CreateCommentRequest request)
     {
         var comment = await _commentService.CreateAsync(taskId, request, CurrentUserId, CurrentUserName);
-        return CreatedAtAction(nameof(GetAll), new { taskId }, comment);
+        return SuccessCreated(comment, "Comentario creado correctamente");
     }
 
     [HttpPut("{commentId}")]
     public async Task<IActionResult> Update(int taskId, string commentId, [FromBody] UpdateCommentRequest request) =>
-        Ok(await _commentService.UpdateAsync(commentId, request, CurrentUserId));
+        Success(await _commentService.UpdateAsync(commentId, request, CurrentUserId), "Comentario actualizado correctamente");
 
     [HttpDelete("{commentId}")]
     public async Task<IActionResult> Delete(int taskId, string commentId)
     {
         await _commentService.DeleteAsync(commentId, CurrentUserId);
-        return NoContent();
+        return SuccessNoContent("Comentario eliminado correctamente");
     }
 }

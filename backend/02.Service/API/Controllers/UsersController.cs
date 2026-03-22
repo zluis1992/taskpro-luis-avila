@@ -14,20 +14,20 @@ public class UsersController : BaseController
 
     [HttpGet]
     public async Task<IActionResult> GetAll() =>
-        Ok(await _userService.GetAllAsync());
+        Success(await _userService.GetAllAsync());
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id) =>
-        Ok(await _userService.GetByIdAsync(id));
+        Success(await _userService.GetByIdAsync(id));
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request) =>
-        Ok(await _userService.UpdateAsync(id, request));
+        Success(await _userService.UpdateAsync(id, request), "Usuario actualizado correctamente");
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         await _userService.DeleteAsync(id);
-        return NoContent();
+        return SuccessNoContent("Usuario eliminado correctamente");
     }
 }

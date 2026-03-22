@@ -133,7 +133,7 @@ export default function ProjectDetailPage() {
     setSaving(true);
     try {
       if (editingTask) {
-        await taskService.update(projectId, editingTask.id, {
+        await taskService.update(editingTask.id, {
           title: form.title,
           description: form.description,
           status: form.status,
@@ -142,7 +142,8 @@ export default function ProjectDetailPage() {
           assignedUserId: form.assignedUserId,
         });
       } else {
-        await taskService.create(projectId, {
+        await taskService.create({
+          projectId,
           title: form.title,
           description: form.description,
           priority: form.priority,
@@ -163,7 +164,7 @@ export default function ProjectDetailPage() {
       'Confirmar eliminación',
     );
     if (!result) return;
-    await taskService.remove(projectId, taskId);
+    await taskService.remove(taskId);
     await loadData();
   }
 

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using API.Models;
 using Domain.Exceptions;
 
 namespace API.Middleware;
@@ -35,13 +36,17 @@ public class ErrorHandlingMiddleware
             NotFoundException e => (HttpStatusCode.NotFound, e.Message),
             UnauthorizedException e => (HttpStatusCode.Forbidden, e.Message),
             BusinessException e => (HttpStatusCode.BadRequest, e.Message),
-            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
+            _ => (HttpStatusCode.InternalServerError, "Ocurrió un error inesperado en el servidor.")
         };
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        var response = JsonSerializer.Serialize(new { error = message });
-        return context.Response.WriteAsync(response);
+        var response = ApiResponse<object>.Fail(message, (int)statusCode);
+        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        });
+        return context.Response.WriteAsync(json);
     }
 }

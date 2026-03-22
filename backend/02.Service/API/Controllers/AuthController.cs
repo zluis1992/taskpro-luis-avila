@@ -15,13 +15,13 @@ public class AuthController : BaseController
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var response = await _authService.LoginAsync(request);
-        return Ok(response);
+        return Success(response, "Inicio de sesión exitoso");
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserRequest request)
     {
         var user = await _authService.RegisterAsync(request);
-        return CreatedAtAction(nameof(Register), user);
+        return SuccessCreated(user, "Usuario registrado correctamente");
     }
 }

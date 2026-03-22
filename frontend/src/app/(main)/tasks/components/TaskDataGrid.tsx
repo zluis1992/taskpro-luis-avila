@@ -2,14 +2,14 @@
 
 import DataGrid, {
   Column,
-  Paging,
-  Pager,
+  Scrolling,
   FilterRow,
   Toolbar,
   Item,
 } from "devextreme-react/data-grid";
 import Button from "devextreme-react/button";
 import {TaskItem} from "@/app/core/models/task.model";
+import {Badge} from "@/app/shared/components/Badge";
 import {STATUS_LABELS, STATUS_COLORS} from "../constants";
 
 type Props = {
@@ -42,6 +42,8 @@ export function TaskDataGrid({
       focusedRowIndex={0}
       columnAutoWidth
       width="100%"
+      height={500}
+      scrolling={{ mode: 'virtual' }}
       loadPanel={{enabled: loading}}
       noDataText="No hay tareas">
       <Toolbar>
@@ -57,8 +59,7 @@ export function TaskDataGrid({
       </Toolbar>
 
       <FilterRow visible />
-      <Paging pageSize={10} />
-      <Pager showPageSizeSelector showInfo visible />
+      <Scrolling mode="virtual" rowRenderingMode="virtual" />
 
       <Column dataField="title" caption="Título" width={300} />
       <Column
@@ -76,21 +77,7 @@ export function TaskDataGrid({
         cellRender={(cell) => {
           const label = STATUS_LABELS[cell.value as string] ?? cell.value;
           const color = STATUS_COLORS[cell.value as string] ?? "#64748b";
-          return (
-            <span
-              style={{
-                display: "inline-block",
-                padding: "2px 10px",
-                borderRadius: 20,
-                fontSize: 12,
-                fontWeight: 600,
-                background: `${color}18`,
-                color,
-                border: `1px solid ${color}40`,
-              }}>
-              {label}
-            </span>
-          );
+          return <Badge label={label} color={color} />;
         }}
       />
       <Column

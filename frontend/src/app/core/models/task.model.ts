@@ -15,6 +15,7 @@ export interface TaskItem {
 }
 
 export interface CreateTaskRequest {
+  projectId: number;
   title: string;
   description: string;
   priority: number;

@@ -4,9 +4,8 @@ import { del, get, post, put } from './api.service';
 export const taskService = {
   getAll: () => get<TaskItem[]>('/tasks'),
   getByProject: (projectId: number) => get<TaskItem[]>(`/projects/${projectId}/tasks`),
-  getById: (projectId: number, taskId: number) => get<TaskItem>(`/projects/${projectId}/tasks/${taskId}`),
-  create: (projectId: number, request: CreateTaskRequest) => post<TaskItem>(`/projects/${projectId}/tasks`, request),
-  update: (projectId: number, taskId: number, request: UpdateTaskRequest) =>
-    put<TaskItem>(`/projects/${projectId}/tasks/${taskId}`, request),
-  remove: (projectId: number, taskId: number) => del(`/projects/${projectId}/tasks/${taskId}`),
+  getById: (taskId: number) => get<TaskItem>(`/tasks/${taskId}`),
+  create: (request: CreateTaskRequest) => post<TaskItem>('/tasks', request),
+  update: (taskId: number, request: UpdateTaskRequest) => put<TaskItem>(`/tasks/${taskId}`, request),
+  remove: (taskId: number) => del(`/tasks/${taskId}`),
 };

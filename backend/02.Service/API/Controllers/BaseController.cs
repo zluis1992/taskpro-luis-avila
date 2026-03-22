@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using API.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -14,4 +15,13 @@ public abstract class BaseController : ControllerBase
 
     protected string CurrentUserName =>
         User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
+
+    protected IActionResult Success<T>(T? data, string mensaje = "Operación exitosa") =>
+        Ok(ApiResponse<T>.Ok(data, mensaje));
+
+    protected IActionResult SuccessCreated<T>(T? data, string mensaje = "Registro creado correctamente") =>
+        StatusCode(201, ApiResponse<T>.Created(data, mensaje));
+
+    protected IActionResult SuccessNoContent(string mensaje = "Registro eliminado correctamente") =>
+        Ok(ApiResponse<object>.Ok(null, mensaje));
 }

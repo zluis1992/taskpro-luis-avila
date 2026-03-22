@@ -14,45 +14,45 @@ public class ProjectsController : BaseController
 
     [HttpGet]
     public async Task<IActionResult> GetAll() =>
-        Ok(await _projectService.GetAllForUserAsync(CurrentUserId));
+        Success(await _projectService.GetAllForUserAsync(CurrentUserId));
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id) =>
-        Ok(await _projectService.GetByIdAsync(id, CurrentUserId));
+        Success(await _projectService.GetByIdAsync(id, CurrentUserId));
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProjectRequest request)
     {
         var project = await _projectService.CreateAsync(request, CurrentUserId);
-        return CreatedAtAction(nameof(GetById), new { id = project.Id }, project);
+        return SuccessCreated(project, "Proyecto creado correctamente");
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateProjectRequest request) =>
-        Ok(await _projectService.UpdateAsync(id, request, CurrentUserId));
+        Success(await _projectService.UpdateAsync(id, request, CurrentUserId), "Proyecto actualizado correctamente");
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         await _projectService.DeleteAsync(id, CurrentUserId);
-        return NoContent();
+        return SuccessNoContent("Proyecto eliminado correctamente");
     }
 
     [HttpGet("{id:int}/members")]
     public async Task<IActionResult> GetMembers(int id) =>
-        Ok(await _projectService.GetMembersAsync(id, CurrentUserId));
+        Success(await _projectService.GetMembersAsync(id, CurrentUserId));
 
     [HttpPost("{id:int}/members/{memberId:int}")]
     public async Task<IActionResult> AddMember(int id, int memberId)
     {
         await _projectService.AddMemberAsync(id, memberId, CurrentUserId);
-        return NoContent();
+        return SuccessNoContent("Miembro agregado correctamente");
     }
 
     [HttpDelete("{id:int}/members/{memberId:int}")]
     public async Task<IActionResult> RemoveMember(int id, int memberId)
     {
         await _projectService.RemoveMemberAsync(id, memberId, CurrentUserId);
-        return NoContent();
+        return SuccessNoContent("Miembro eliminado correctamente");
     }
 }

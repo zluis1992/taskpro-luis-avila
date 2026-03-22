@@ -8,6 +8,7 @@ import { Project } from '@/app/core/models/project.model';
 import { taskService } from '@/app/core/services/task.service';
 import { projectService } from '@/app/core/services/project.service';
 import { userService } from '@/app/core/services/user.service';
+import notify from 'devextreme/ui/notify';
 import { PRIORITY_LABELS, PRIORITY_OPTIONS, STATUS_LABELS, STATUS_OPTIONS } from '../constants';
 import { TaskFormData, emptyTaskForm } from '../types';
 
@@ -32,16 +33,14 @@ export function useTasks() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [projList, userList] = await Promise.all([
+      const [taskList, projList, userList] = await Promise.all([
+        taskService.getAll(),
         projectService.getAll(),
         userService.getAll(),
       ]);
+      setTasks(taskList);
       setProjects(projList);
       setUsers(userList);
-      const taskLists = await Promise.all(
-        projList.map((p) => taskService.getByProject(p.id).catch(() => [])),
-      );
-      setTasks(taskLists.flat());
     } finally {
       setLoading(false);
     }
@@ -78,10 +77,33 @@ export function useTasks() {
 
   async function handleSave() {
     if (!form.title.trim() || !form.projectId) return;
+
+    // Validación: fecha de vencimiento no puede ser pasada
+    if (form.dueDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (new Date(form.dueDate) < today) {
+        notify({ message: 'La fecha de vencimiento no puede ser una fecha pasada.', minWidth: 280 }, 'warning', 4000);
+        return;
+      }
+    }
+
+    // Validación: título duplicado en el mismo proyecto
+    const isDuplicate = tasks.some(
+      (t) =>
+        t.projectId === form.projectId &&
+        t.title.trim().toLowerCase() === form.title.trim().toLowerCase() &&
+        t.id !== editingTask?.id,
+    );
+    if (isDuplicate) {
+      notify({ message: 'Ya existe una tarea con ese título en el proyecto seleccionado.', minWidth: 280 }, 'warning', 4000);
+      return;
+    }
+
     setSaving(true);
     try {
       if (editingTask) {
-        await taskService.update(editingTask.projectId, editingTask.id, {
+        await taskService.update(editingTask.id, {
           title: form.title,
           description: form.description,
           status: form.status,
@@ -90,7 +112,8 @@ export function useTasks() {
           assignedUserId: form.assignedUserId,
         });
       } else {
-        await taskService.create(form.projectId, {
+        await taskService.create({
+          projectId: form.projectId!,
           title: form.title,
           description: form.description,
           priority: form.priority,
@@ -111,7 +134,7 @@ export function useTasks() {
       'Confirmar eliminación',
     );
     if (!result) return;
-    await taskService.remove(task.projectId, task.id);
+    await taskService.remove(task.id);
     await loadData();
   }
 

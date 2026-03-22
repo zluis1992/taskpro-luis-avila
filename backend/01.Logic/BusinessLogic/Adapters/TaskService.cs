@@ -22,13 +22,6 @@ public class TaskService : ITaskService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<TaskDto>> GetByProjectAsync(int projectId, int userId)
-    {
-        await EnsureProjectAccessAsync(projectId, userId);
-        var tasks = await _taskRepository.GetByProjectAsync(projectId);
-        return _mapper.Map<IEnumerable<TaskDto>>(tasks);
-    }
-
     public async Task<IEnumerable<TaskDto>> GetAllForUserAsync(int userId)
     {
         var tasks = await _taskRepository.GetAllForUserAsync(userId);
@@ -44,12 +37,12 @@ public class TaskService : ITaskService
         return _mapper.Map<TaskDto>(task);
     }
 
-    public async Task<TaskDto> CreateAsync(int projectId, CreateTaskRequest request, int userId)
+    public async Task<TaskDto> CreateAsync(CreateTaskRequest request, int userId)
     {
-        await EnsureProjectAccessAsync(projectId, userId);
+        await EnsureProjectAccessAsync(request.ProjectId, userId);
 
         var task = _mapper.Map<TaskItem>(request);
-        task.ProjectId = projectId;
+        task.ProjectId = request.ProjectId;
         task.Priority = (TaskPriority)request.Priority;
 
         var created = await _taskRepository.AddAsync(task);
