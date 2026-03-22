@@ -10,4 +10,5 @@ public interface ITaskRepository : IGenericRepository<TaskItem>
     Task<IEnumerable<TaskItem>> GetByProjectAsync(int projectId);
     Task<IEnumerable<TaskItem>> GetByAssignedUserAsync(int userId);
     Task<IEnumerable<TaskItem>> GetByStatusAsync(int projectId, TaskStatus status);
+    Task<IEnumerable<TaskItem>> GetAllForUserAsync(int userId);
 }

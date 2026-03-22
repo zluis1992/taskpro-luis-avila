@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import TextBox from 'devextreme-react/text-box';
-import Button from 'devextreme-react/button';
+import { DxForm, ButtonItem, SimpleItem } from '@/app/shared/components/dx-form';
+import Toast from 'devextreme-react/toast';
 import { authService } from '@/app/core/services/auth.service';
 
 export default function LoginPage() {
@@ -22,59 +22,63 @@ export default function LoginPage() {
       await authService.login({ email, password });
       router.push('/dashboard');
     } catch {
-      setError('Invalid email or password.');
+      setError('Email o contraseña incorrectos.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{
-      background: '#fff', borderRadius: 8, padding: 40,
-      width: 380, boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
-    }}>
-      <h1 style={{ fontSize: 24, marginBottom: 8 }}>TaskPro</h1>
-      <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>Sign in to your account</p>
+    <div className="taskpro-auth-card">
+      <Toast visible={!!error} message={error} type="error" displayTime={2500} onHiding={() => setError('')} />
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>Email</label>
-          <TextBox
-            value={email}
-            onValueChanged={(e) => setEmail(e.value)}
-            placeholder="you@example.com"
-            width="100%"
-          />
-        </div>
+      <div className="taskpro-auth-card-header">
+        <h1>TaskPro</h1>
+        <p>Bienvenido, inicia sesión para continuar</p>
+      </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>Password</label>
-          <TextBox
-            value={password}
-            onValueChanged={(e) => setPassword(e.value)}
-            mode="password"
-            placeholder="••••••••"
-            width="100%"
-          />
-        </div>
+      <div className="taskpro-auth-card-body">
+        <form onSubmit={handleSubmit}>
+          <DxForm>
+            <SimpleItem
+              dataField="email"
+              label={{ text: 'Correo electrónico' }}
+              editorType="dxTextBox"
+              editorOptions={{
+                value: email,
+                onValueChanged: (e: { value: string }) => setEmail(e.value),
+                placeholder: 'tu@correo.com',
+              }}
+              isRequired
+            />
+            <SimpleItem
+              dataField="password"
+              label={{ text: 'Contraseña' }}
+              editorType="dxTextBox"
+              editorOptions={{
+                value: password,
+                onValueChanged: (e: { value: string }) => setPassword(e.value),
+                mode: 'password',
+              }}
+              isRequired
+            />
+            <ButtonItem
+              buttonOptions={{
+                text: loading ? 'Iniciando sesión...' : 'Iniciar sesión',
+                type: 'default',
+                useSubmitBehavior: true,
+                width: '100%',
+                disabled: loading,
+              }}
+            />
+          </DxForm>
+        </form>
+      </div>
 
-        {error && (
-          <p style={{ color: '#e53e3e', fontSize: 13, marginBottom: 16 }}>{error}</p>
-        )}
-
-        <Button
-          text={loading ? 'Signing in...' : 'Sign In'}
-          type="default"
-          useSubmitBehavior
-          width="100%"
-          disabled={loading}
-        />
-      </form>
-
-      <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#666' }}>
-        Don&apos;t have an account?{' '}
-        <Link href="/register" style={{ color: '#3b82f6' }}>Register</Link>
-      </p>
+      <div className="taskpro-auth-card-footer">
+        ¿No tienes cuenta?
+        <Link href="/register">Regístrate</Link>
+      </div>
     </div>
   );
 }

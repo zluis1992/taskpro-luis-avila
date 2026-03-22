@@ -1,12 +1,21 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DataGrid, { Column, Paging, SearchPanel, Toolbar, Item } from 'devextreme-react/data-grid';
+import DataGrid, {
+  Column,
+  Paging,
+  SearchPanel,
+  Toolbar,
+  Item,
+  FilterRow,
+  HeaderFilter,
+} from 'devextreme-react/data-grid';
 import Button from 'devextreme-react/button';
 import Popup from 'devextreme-react/popup';
-import TextBox from 'devextreme-react/text-box';
-import TextArea from 'devextreme-react/text-area';
+import { DxForm, ButtonItem, SimpleItem, GroupItem } from '@/app/shared/components/dx-form';
+import ScrollView from 'devextreme-react/scroll-view';
+import { confirm as dxConfirm } from 'devextreme/ui/dialog';
 import { Project } from '@/app/core/models/project.model';
 import { projectService } from '@/app/core/services/project.service';
 
@@ -29,7 +38,13 @@ export default function ProjectsPage() {
     }
   }
 
-  useEffect(() => { loadProjects(); }, []);
+  useEffect(() => { void loadProjects(); }, []);
+
+  function openNewProjectPopup() {
+    setName('');
+    setDescription('');
+    setPopupVisible(true);
+  }
 
   async function handleCreate() {
     if (!name.trim()) return;
@@ -37,82 +52,137 @@ export default function ProjectsPage() {
     try {
       await projectService.create({ name, description });
       setPopupVisible(false);
-      setName('');
-      setDescription('');
       await loadProjects();
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm('Delete this project?')) return;
+  async function handleDelete(id: number, projectName: string) {
+    const result = await dxConfirm(
+      `¿Está seguro de que desea eliminar el proyecto "<b>${projectName}</b>"? Esta acción no se puede deshacer.`,
+      'Confirmar eliminación',
+    );
+    if (!result) return;
     await projectService.remove(id);
     await loadProjects();
   }
 
   return (
-    <div style={{ padding: 32 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 600 }}>Projects</h1>
-        <Button text="New Project" type="default" icon="plus" onClick={() => setPopupVisible(true)} />
-      </div>
+    <div>
+      <div className="tp-page-title">Proyectos</div>
+      <div className="tp-page-subtitle">Gestión de proyectos y equipos de trabajo</div>
 
       <DataGrid
         dataSource={projects}
         keyExpr="id"
         showBorders
         rowAlternationEnabled
+        hoverStateEnabled
         onRowClick={(e) => router.push(`/projects/${e.data.id}`)}
+        loadPanel={{ enabled: loading }}
+        noDataText="No hay proyectos registrados"
+        wordWrapEnabled
       >
-        <SearchPanel visible />
+        <Toolbar>
+          <Item location="before">
+            <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--tp-primary)' }}>
+              Lista de Proyectos
+            </span>
+          </Item>
+          <Item name="searchPanel" />
+          <Item location="after">
+            <Button
+              text="Nuevo Proyecto"
+              type="default"
+              icon="plus"
+              onClick={openNewProjectPopup}
+            />
+          </Item>
+        </Toolbar>
+        <SearchPanel visible placeholder="Buscar..." />
+        <FilterRow visible />
+        <HeaderFilter visible />
         <Paging pageSize={10} />
-        <Column dataField="name" caption="Name" />
-        <Column dataField="description" caption="Description" />
-        <Column dataField="ownerName" caption="Owner" width={140} />
+
+        <Column dataField="name" caption="Nombre" />
+        <Column dataField="description" caption="Descripción" />
+        <Column dataField="ownerName" caption="Propietario" width={160} />
         <Column
           dataField="members"
-          caption="Members"
+          caption="Miembros"
           width={90}
+          alignment="center"
           calculateCellValue={(row: Project) => row.members?.length ?? 0}
         />
-        <Column dataField="createdAt" caption="Created" dataType="date" width={120} />
+        <Column dataField="createdAt" caption="Creado" dataType="date" width={120} />
         <Column
-          caption="Actions"
-          width={80}
+          caption="Acciones"
+          width={110}
+          alignment="center"
           cellRender={(cell) => (
-            <button
-              onClick={(e) => { e.stopPropagation(); handleDelete(cell.data.id); }}
-              style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer' }}
-            >
-              Delete
-            </button>
+            <Button
+              icon="trash"
+              text="Eliminar"
+              type="danger"
+              stylingMode="text"
+              onClick={(e) => {
+                e.event?.stopPropagation();
+                void handleDelete(cell.data.id, cell.data.name);
+              }}
+            />
           )}
         />
       </DataGrid>
 
+      {/* Popup: Nuevo Proyecto */}
       <Popup
         visible={popupVisible}
-        title="New Project"
-        width={420}
+        title="Nuevo Proyecto"
+        width={440}
         height="auto"
         onHiding={() => setPopupVisible(false)}
         showCloseButton
+        dragEnabled={false}
       >
-        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>Name *</label>
-            <TextBox value={name} onValueChanged={(e) => setName(e.value)} width="100%" />
-          </div>
-          <div>
-            <label style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>Description</label>
-            <TextArea value={description} onValueChanged={(e) => setDescription(e.value)} height={80} width="100%" />
-          </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <Button text="Cancel" onClick={() => setPopupVisible(false)} />
-            <Button text={saving ? 'Saving...' : 'Create'} type="default" onClick={handleCreate} disabled={saving} />
-          </div>
-        </div>
+        <ScrollView>
+          <DxForm>
+            <GroupItem caption="Información del proyecto">
+              <SimpleItem
+                dataField="nombre"
+                label={{ text: 'Nombre del proyecto' }}
+                editorType="dxTextBox"
+                editorOptions={{
+                  value: name,
+                  onValueChanged: (e: { value: string }) => setName(e.value),
+                  placeholder: 'Ej: Rediseño de sitio web',
+                }}
+                isRequired
+              />
+              <SimpleItem
+                dataField="descripcion"
+                label={{ text: 'Descripción' }}
+                editorType="dxTextArea"
+                editorOptions={{
+                  value: description,
+                  onValueChanged: (e: { value: string }) => setDescription(e.value),
+                  height: 100,
+                  placeholder: 'Describe el objetivo del proyecto...',
+                }}
+              />
+            </GroupItem>
+            <ButtonItem
+              horizontalAlignment="right"
+              buttonOptions={{
+                text: saving ? 'Guardando...' : 'Crear Proyecto',
+                type: 'default',
+                icon: 'save',
+                disabled: saving || !name.trim(),
+                onClick: () => void handleCreate(),
+              }}
+            />
+          </DxForm>
+        </ScrollView>
       </Popup>
     </div>
   );

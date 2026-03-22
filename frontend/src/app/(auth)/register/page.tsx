@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import TextBox from 'devextreme-react/text-box';
-import Button from 'devextreme-react/button';
+import { DxForm, ButtonItem, SimpleItem } from '@/app/shared/components/dx-form';
+import Toast from 'devextreme-react/toast';
 import { authService } from '@/app/core/services/auth.service';
 
 export default function RegisterPage() {
@@ -24,43 +24,74 @@ export default function RegisterPage() {
       await authService.login({ email, password });
       router.push('/dashboard');
     } catch {
-      setError('Registration failed. Please try again.');
+      setError('El registro falló. Por favor intenta de nuevo.');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{
-      background: '#fff', borderRadius: 8, padding: 40,
-      width: 380, boxShadow: '0 2px 12px rgba(0,0,0,0.1)'
-    }}>
-      <h1 style={{ fontSize: 24, marginBottom: 8 }}>Create Account</h1>
-      <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>Join TaskPro today</p>
+    <div className="taskpro-auth-card">
+      <Toast visible={!!error} message={error} type="error" displayTime={2500} onHiding={() => setError('')} />
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>Name</label>
-          <TextBox value={name} onValueChanged={(e) => setName(e.value)} placeholder="Your name" width="100%" />
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>Email</label>
-          <TextBox value={email} onValueChanged={(e) => setEmail(e.value)} placeholder="you@example.com" width="100%" />
-        </div>
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>Password</label>
-          <TextBox value={password} onValueChanged={(e) => setPassword(e.value)} mode="password" placeholder="Min. 6 characters" width="100%" />
-        </div>
+      <div className="taskpro-auth-card-header">
+        <h1>TaskPro</h1>
+        <p>Crea tu cuenta para comenzar</p>
+      </div>
 
-        {error && <p style={{ color: '#e53e3e', fontSize: 13, marginBottom: 16 }}>{error}</p>}
+      <div className="taskpro-auth-card-body">
+        <form onSubmit={handleSubmit}>
+          <DxForm>
+            <SimpleItem
+              dataField="name"
+              label={{ text: 'Nombre' }}
+              editorType="dxTextBox"
+              editorOptions={{
+                value: name,
+                onValueChanged: (e: { value: string }) => setName(e.value),
+                placeholder: 'Tu nombre',
+              }}
+              isRequired
+            />
+            <SimpleItem
+              dataField="email"
+              label={{ text: 'Correo electrónico' }}
+              editorType="dxTextBox"
+              editorOptions={{
+                value: email,
+                onValueChanged: (e: { value: string }) => setEmail(e.value),
+                placeholder: 'tu@correo.com',
+              }}
+              isRequired
+            />
+            <SimpleItem
+              dataField="password"
+              label={{ text: 'Contraseña' }}
+              editorType="dxTextBox"
+              editorOptions={{
+                value: password,
+                onValueChanged: (e: { value: string }) => setPassword(e.value),
+                mode: 'password',
+              }}
+              isRequired
+            />
+            <ButtonItem
+              buttonOptions={{
+                text: loading ? 'Creando cuenta...' : 'Crear cuenta',
+                type: 'default',
+                useSubmitBehavior: true,
+                width: '100%',
+                disabled: loading,
+              }}
+            />
+          </DxForm>
+        </form>
+      </div>
 
-        <Button text={loading ? 'Creating...' : 'Create Account'} type="default" useSubmitBehavior width="100%" disabled={loading} />
-      </form>
-
-      <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#666' }}>
-        Already have an account?{' '}
-        <Link href="/login" style={{ color: '#3b82f6' }}>Sign in</Link>
-      </p>
+      <div className="taskpro-auth-card-footer">
+        ¿Ya tienes cuenta?
+        <Link href="/login">Inicia sesión</Link>
+      </div>
     </div>
   );
 }

@@ -34,6 +34,29 @@ docker-compose up --build
 | SQL Server | localhost:1433 |
 | MongoDB | localhost:27017 |
 
+## Credenciales por defecto (desarrollo)
+
+Al iniciar el backend en `Development`, se crean usuarios por defecto si la tabla `Users` está vacía.
+
+| Rol | Email | Password |
+|---|---|---|
+| Admin | admin@taskpro.local | TaskPro123! |
+| Member | user@taskpro.local | TaskPro123! |
+
+## Licencia DevExtreme (desarrollo)
+
+La app carga la licencia desde `NEXT_PUBLIC_DEVEXTREME_LICENSE_KEY` (no se versiona).
+
+Crear un archivo `.env` en la raíz del repo con:
+
+```env
+NEXT_PUBLIC_DEVEXTREME_LICENSE_KEY=<tu_clave>
+```
+
+El frontend carga este `.env` desde la raíz tanto en local como en Docker.
+
+La clave se puede obtener del repositorio `koryntalpos` en `frontend/src/devextreme-license.ts` (no se copia aquí para evitar exponer secretos).
+
 ## Desarrollo local sin Docker
 
 **Backend:**
@@ -41,7 +64,6 @@ docker-compose up --build
 cd backend
 # Ajustar connection strings en appsettings.Development.json
 dotnet run --project 02.Service/API/API.csproj
-```
 
 **Frontend:**
 ```bash

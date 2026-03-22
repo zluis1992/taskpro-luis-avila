@@ -2,6 +2,7 @@ import { CreateTaskRequest, TaskItem, UpdateTaskRequest } from '../models/task.m
 import { del, get, post, put } from './api.service';
 
 export const taskService = {
+  getAll: () => get<TaskItem[]>('/tasks'),
   getByProject: (projectId: number) => get<TaskItem[]>(`/projects/${projectId}/tasks`),
   getById: (projectId: number, taskId: number) => get<TaskItem>(`/projects/${projectId}/tasks/${taskId}`),
   create: (projectId: number, request: CreateTaskRequest) => post<TaskItem>(`/projects/${projectId}/tasks`, request),

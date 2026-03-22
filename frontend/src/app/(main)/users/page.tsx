@@ -1,9 +1,24 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import DataGrid, { Column, Paging, SearchPanel, Editing } from 'devextreme-react/data-grid';
+import DataGrid, {
+  Column,
+  Paging,
+  SearchPanel,
+  Toolbar,
+  Item,
+  FilterRow,
+  HeaderFilter,
+} from 'devextreme-react/data-grid';
+import Button from 'devextreme-react/button';
+import { confirm as dxConfirm } from 'devextreme/ui/dialog';
 import { User } from '@/app/core/models/user.model';
 import { userService } from '@/app/core/services/user.service';
+
+const ROLE_LABELS: Record<string, string> = {
+  Admin: 'Administrador',
+  Member: 'Miembro',
+};
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -19,40 +34,75 @@ export default function UsersPage() {
     }
   }
 
-  useEffect(() => { loadUsers(); }, []);
+  useEffect(() => { void loadUsers(); }, []);
 
-  async function handleDelete(id: number) {
-    if (!confirm('Delete this user?')) return;
+  async function handleDelete(id: number, userName: string) {
+    const result = await dxConfirm(
+      `¿Está seguro de que desea eliminar al usuario "<b>${userName}</b>"?`,
+      'Confirmar eliminación',
+    );
+    if (!result) return;
     await userService.remove(id);
     await loadUsers();
   }
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 24 }}>Users</h1>
+    <div>
+      <div className="tp-page-title">Usuarios</div>
+      <div className="tp-page-subtitle">Gestión de usuarios del sistema</div>
 
       <DataGrid
         dataSource={users}
         keyExpr="id"
         showBorders
         rowAlternationEnabled
+        hoverStateEnabled
+        loadPanel={{ enabled: loading }}
+        noDataText="Sin usuarios registrados"
       >
-        <SearchPanel visible />
+        <Toolbar>
+          <Item location="before">
+            <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--tp-primary)' }}>
+              Lista de Usuarios
+            </span>
+          </Item>
+          <Item name="searchPanel" />
+          <Item location="after">
+            <Button
+              icon="refresh"
+              text="Actualizar"
+              stylingMode="outlined"
+              onClick={() => void loadUsers()}
+              disabled={loading}
+            />
+          </Item>
+        </Toolbar>
+        <SearchPanel visible placeholder="Buscar usuario..." />
+        <FilterRow visible />
+        <HeaderFilter visible />
         <Paging pageSize={10} />
-        <Column dataField="name" caption="Name" />
-        <Column dataField="email" caption="Email" />
-        <Column dataField="role" caption="Role" width={100} />
-        <Column dataField="createdAt" caption="Created" dataType="date" width={120} />
+
+        <Column dataField="name" caption="Nombre" />
+        <Column dataField="email" caption="Correo electrónico" />
         <Column
-          caption="Actions"
-          width={80}
+          dataField="role"
+          caption="Rol"
+          width={140}
+          calculateCellValue={(row: User) => ROLE_LABELS[row.role] ?? row.role}
+        />
+        <Column dataField="createdAt" caption="Fecha de registro" dataType="date" width={160} />
+        <Column
+          caption="Acciones"
+          width={110}
+          alignment="center"
           cellRender={(cell) => (
-            <button
-              onClick={() => handleDelete(cell.data.id)}
-              style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: 12 }}
-            >
-              Delete
-            </button>
+            <Button
+              icon="trash"
+              text="Eliminar"
+              type="danger"
+              stylingMode="text"
+              onClick={() => void handleDelete(cell.data.id, cell.data.name)}
+            />
           )}
         />
       </DataGrid>

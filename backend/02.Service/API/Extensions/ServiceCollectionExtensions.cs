@@ -4,6 +4,7 @@ using BusinessLogic.Ports;
 using Domain.Interface;
 using FluentValidation;
 using Infrastructure.Data;
+using Infrastructure.Data.Seeders;
 using Infrastructure.Mapper;
 using Infrastructure.Mongo;
 using Infrastructure.Validators;
@@ -29,6 +30,14 @@ public static class ServiceCollectionExtensions
             config.GetConnectionString("MongoDB")!,
             config["MongoDB:DatabaseName"] ?? "taskpro"));
 
+        return services;
+    }
+
+    public static IServiceCollection AddDatabaseInitialization(this IServiceCollection services)
+    {
+        services.AddScoped<DatabaseInitializationRunner>();
+        services.AddScoped<IDatabaseSeeder, DefaultUsersSeeder>();
+        services.AddScoped<IDatabaseSeeder, DefaultProjectsSeeder>();
         return services;
     }
 

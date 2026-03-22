@@ -11,7 +11,11 @@
       "Bash(npm install:*)",
       "Bash(npm run:*)",
       "Bash(dotnet tool:*)",
-      "Bash(dotnet ef:*)"
+      "Bash(dotnet ef:*)",
+      "Read(//c/Users/luis/sources/repos/koryntalpos/**)",
+      "Bash(find /c/Users/luis/sources/repos/koryntalpos/frontend/src/app/modules -name *form*.html)",
+      "Bash(docker compose:*)",
+      "Bash(docker volume:*)"
     ]
   }
 }

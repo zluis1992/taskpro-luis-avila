@@ -1,7 +1,6 @@
 using API.Extensions;
 using API.Middleware;
 using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +14,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwagger();
 builder.Services.AddDatabase(builder.Configuration);
+builder.Services.AddDatabaseInitialization();
 builder.Services.AddRepositories();
 builder.Services.AddBusinessServices();
 builder.Services.AddJwtAuthentication(builder.Configuration);
@@ -34,12 +34,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Apply migrations on startup
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
+await app.Services.InitializeDatabaseAsync();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseSerilogRequestLogging();

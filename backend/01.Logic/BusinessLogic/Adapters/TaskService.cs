@@ -29,6 +29,12 @@ public class TaskService : ITaskService
         return _mapper.Map<IEnumerable<TaskDto>>(tasks);
     }
 
+    public async Task<IEnumerable<TaskDto>> GetAllForUserAsync(int userId)
+    {
+        var tasks = await _taskRepository.GetAllForUserAsync(userId);
+        return _mapper.Map<IEnumerable<TaskDto>>(tasks);
+    }
+
     public async Task<TaskDto> GetByIdAsync(int taskId, int userId)
     {
         var task = await _taskRepository.GetByIdWithDetailsAsync(taskId)
