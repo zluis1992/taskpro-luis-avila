@@ -13,9 +13,14 @@ export function useUsers() {
   const [saving, setSaving] = useState(false);
 
   const [popupVisible, setPopupVisible] = useState(false);
+  const [popupMode, setPopupMode] = useState<'create' | 'edit'>('create');
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -30,9 +35,12 @@ export function useUsers() {
   useEffect(() => { void loadData(); }, [loadData]);
 
   function handleNew() {
+    setEditingUser(null);
+    setPopupMode('create');
     setName('');
     setEmail('');
     setPassword('');
+    setDetailVisible(false);
     setPopupVisible(true);
   }
 
@@ -58,11 +66,44 @@ export function useUsers() {
   }
 
   function handleView(user: User) {
-    notify({ message: `Usuario: ${user.name} (${user.email})`, minWidth: 280 }, 'info', 3000);
+    setSelectedUser(user);
+    setDetailVisible(true);
   }
 
   function handleEdit(user: User) {
-    notify({ message: `Editar: ${user.name}`, minWidth: 280 }, 'info', 3000);
+    setDetailVisible(false);
+    setEditingUser(user);
+    setPopupMode('edit');
+    setName(user.name);
+    setEmail(user.email);
+    setPassword('');
+    setPopupVisible(true);
+  }
+
+  async function handleUpdate() {
+    if (!editingUser || !name.trim() || !email.trim()) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      notify({ message: 'El formato del correo electrónico no es válido.', minWidth: 280 }, 'warning', 3000);
+      return;
+    }
+    if (password && password.length < 6) {
+      notify({ message: 'La contraseña debe tener al menos 6 caracteres.', minWidth: 280 }, 'warning', 3000);
+      return;
+    }
+    setSaving(true);
+    try {
+      const request: { name: string; email: string; password?: string } = {
+        name: name.trim(),
+        email: email.trim(),
+      };
+      if (password.trim()) request.password = password.trim();
+      await userService.update(editingUser.id, request);
+      setPopupVisible(false);
+      await loadData();
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDelete(id: number, userName: string) {
@@ -72,6 +113,7 @@ export function useUsers() {
     );
     if (!result) return;
     await userService.remove(id);
+    setDetailVisible(false);
     await loadData();
   }
 
@@ -80,6 +122,7 @@ export function useUsers() {
     loading,
     saving,
     popupVisible,
+    popupMode,
     name,
     email,
     password,
@@ -87,8 +130,12 @@ export function useUsers() {
     setEmail,
     setPassword,
     setPopupVisible,
+    detailVisible,
+    selectedUser,
+    setDetailVisible,
     handleNew,
     handleCreate,
+    handleUpdate,
     handleView,
     handleEdit,
     handleDelete,

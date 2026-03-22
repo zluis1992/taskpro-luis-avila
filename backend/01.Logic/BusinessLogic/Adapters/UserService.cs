@@ -36,11 +36,14 @@ public class UserService : IUserService
             ?? throw new NotFoundException(nameof(Domain.Entity.User), id);
 
         if (user.Email != request.Email && await _userRepository.EmailExistsAsync(request.Email))
-            throw new BusinessException("Email is already in use.");
+            throw new BusinessException("El correo ya está en uso.");
 
         user.Name = request.Name;
         user.Email = request.Email;
         user.UpdatedAt = DateTime.UtcNow;
+
+        if (!string.IsNullOrWhiteSpace(request.Password))
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12);
 
         await _userRepository.UpdateAsync(user);
         return _mapper.Map<UserDto>(user);

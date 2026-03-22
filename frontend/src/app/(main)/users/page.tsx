@@ -3,6 +3,7 @@
 import { useUsers } from './hooks/useUsers';
 import { UserDataGrid } from './components/UserDataGrid';
 import { UserFormPopup } from './components/UserFormPopup';
+import { UserDetailPopup } from './components/UserDetailPopup';
 
 export default function UsersPage() {
   const u = useUsers();
@@ -21,8 +22,17 @@ export default function UsersPage() {
         onDelete={u.handleDelete}
       />
 
+      <UserDetailPopup
+        visible={u.detailVisible}
+        user={u.selectedUser}
+        onHiding={() => u.setDetailVisible(false)}
+        onEdit={u.handleEdit}
+        onDelete={u.handleDelete}
+      />
+
       <UserFormPopup
         visible={u.popupVisible}
+        mode={u.popupMode}
         name={u.name}
         email={u.email}
         password={u.password}
@@ -31,7 +41,7 @@ export default function UsersPage() {
         onEmailChange={u.setEmail}
         onPasswordChange={u.setPassword}
         onHiding={() => u.setPopupVisible(false)}
-        onSave={u.handleCreate}
+        onSave={u.popupMode === 'create' ? u.handleCreate : u.handleUpdate}
       />
     </div>
   );

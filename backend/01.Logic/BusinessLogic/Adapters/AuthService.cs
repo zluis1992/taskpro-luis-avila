@@ -33,8 +33,17 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetByEmailAsync(email)
             ?? throw new UnauthorizedException("Correo o contraseña incorrectos.");
 
-        if (!VerifyPassword(request.Password.Trim(), user.PasswordHash))
+        var password = request.Password.Trim();
+        var isValid = VerifyPassword(password, user.PasswordHash);
+
+        if (!isValid)
             throw new UnauthorizedException("Correo o contraseña incorrectos.");
+
+        if (!user.PasswordHash.StartsWith("$2"))
+        {
+            user.PasswordHash = HashPassword(password);
+            await _userRepository.UpdateAsync(user);
+        }
 
         var token = GenerateJwtToken(user);
         var expiresAt = DateTime.UtcNow.AddMinutes(
@@ -96,6 +105,20 @@ public class AuthService : IAuthService
     private static string HashPassword(string password) =>
         BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
 
-    private static bool VerifyPassword(string password, string hash) =>
-        BCrypt.Net.BCrypt.Verify(password, hash);
+    private static bool VerifyPassword(string password, string hash)
+    {
+        try
+        {
+            if (hash.StartsWith("$2"))
+                return BCrypt.Net.BCrypt.Verify(password, hash);
+
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            var bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(bytes) == hash;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

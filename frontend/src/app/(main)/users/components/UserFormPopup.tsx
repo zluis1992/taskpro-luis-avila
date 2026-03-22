@@ -7,6 +7,7 @@ import Button from 'devextreme-react/button';
 
 type Props = {
   visible: boolean;
+  mode: 'create' | 'edit';
   name: string;
   email: string;
   password: string;
@@ -20,6 +21,7 @@ type Props = {
 
 export function UserFormPopup({
   visible,
+  mode,
   name,
   email,
   password,
@@ -30,10 +32,12 @@ export function UserFormPopup({
   onHiding,
   onSave,
 }: Props) {
+  const isEdit = mode === 'edit';
+
   return (
     <Popup
       visible={visible}
-      title="Nuevo Usuario"
+      title={isEdit ? 'Editar Usuario' : 'Nuevo Usuario'}
       width={440}
       height="auto"
       container=".taskpro-content"
@@ -63,23 +67,38 @@ export function UserFormPopup({
               placeholder="correo@ejemplo.com"
             />
           </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#555' }}>
-              Contraseña <span style={{ color: '#dc3545' }}>*</span>
-            </label>
-            <TextBox
-              value={password}
-              mode="password"
-              onValueChanged={(e) => onPasswordChange(e.value as string)}
-              placeholder="Mínimo 6 caracteres"
-            />
-          </div>
+          {!isEdit && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#555' }}>
+                Contraseña <span style={{ color: '#dc3545' }}>*</span>
+              </label>
+              <TextBox
+                value={password}
+                mode="password"
+                onValueChanged={(e) => onPasswordChange(e.value as string)}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+          )}
+          {isEdit && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500, color: '#555' }}>
+                Nueva contraseña
+              </label>
+              <TextBox
+                value={password}
+                mode="password"
+                onValueChanged={(e) => onPasswordChange(e.value as string)}
+                placeholder="Dejar vacío para no cambiar"
+              />
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
-              text={saving ? 'Guardando...' : 'Crear Usuario'}
+              text={saving ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear Usuario'}
               type="default"
               icon="save"
-              disabled={saving || !name.trim() || !email.trim() || !password.trim()}
+              disabled={saving || !name.trim() || !email.trim() || (!isEdit && !password.trim())}
               onClick={onSave}
             />
           </div>
