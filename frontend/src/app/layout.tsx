@@ -6,6 +6,9 @@ import { DevExtremeLicenseProvider } from "@/app/core/providers/DevExtremeLicens
 export const metadata: Metadata = {
   title: "TaskPro",
   description: "Gestión de tareas y proyectos",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
