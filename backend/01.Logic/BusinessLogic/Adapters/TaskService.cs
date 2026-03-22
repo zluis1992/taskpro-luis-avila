@@ -13,12 +13,14 @@ public class TaskService : ITaskService
 {
     private readonly ITaskRepository _taskRepository;
     private readonly IProjectRepository _projectRepository;
+    private readonly ICommentRepository _commentRepository;
     private readonly IMapper _mapper;
 
-    public TaskService(ITaskRepository taskRepository, IProjectRepository projectRepository, IMapper mapper)
+    public TaskService(ITaskRepository taskRepository, IProjectRepository projectRepository, ICommentRepository commentRepository, IMapper mapper)
     {
         _taskRepository = taskRepository;
         _projectRepository = projectRepository;
+        _commentRepository = commentRepository;
         _mapper = mapper;
     }
 
@@ -82,7 +84,9 @@ public class TaskService : ITaskService
             ?? throw new NotFoundException(nameof(TaskItem), taskId);
 
         await EnsureProjectAccessAsync(task.ProjectId, userId);
-        await _taskRepository.DeleteAsync(task);
+        task.SoftDelete();
+        await _taskRepository.UpdateAsync(task);
+        await _commentRepository.SoftDeleteByTaskAsync(taskId);
     }
 
     private async Task EnsureProjectAccessAsync(int projectId, int userId)

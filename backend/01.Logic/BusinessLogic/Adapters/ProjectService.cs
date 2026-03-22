@@ -12,12 +12,21 @@ public class ProjectService : IProjectService
 {
     private readonly IProjectRepository _projectRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ITaskRepository _taskRepository;
+    private readonly ICommentRepository _commentRepository;
     private readonly IMapper _mapper;
 
-    public ProjectService(IProjectRepository projectRepository, IUserRepository userRepository, IMapper mapper)
+    public ProjectService(
+        IProjectRepository projectRepository,
+        IUserRepository userRepository,
+        ITaskRepository taskRepository,
+        ICommentRepository commentRepository,
+        IMapper mapper)
     {
         _projectRepository = projectRepository;
         _userRepository = userRepository;
+        _taskRepository = taskRepository;
+        _commentRepository = commentRepository;
         _mapper = mapper;
     }
 
@@ -78,9 +87,18 @@ public class ProjectService : IProjectService
             ?? throw new NotFoundException(nameof(Project), id);
 
         if (project.OwnerId != userId)
-            throw new UnauthorizedException("Only the project owner can delete it.");
+            throw new UnauthorizedException("Solo el propietario del proyecto puede eliminarlo.");
 
-        await _projectRepository.DeleteAsync(project);
+        var tasks = await _taskRepository.GetByProjectAsync(id);
+        foreach (var task in tasks)
+        {
+            task.SoftDelete();
+            await _taskRepository.UpdateAsync(task);
+            await _commentRepository.SoftDeleteByTaskAsync(task.Id);
+        }
+
+        project.SoftDelete();
+        await _projectRepository.UpdateAsync(project);
     }
 
     public async Task AddMemberAsync(int projectId, int memberId, int requesterId)

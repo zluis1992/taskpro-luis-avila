@@ -9,4 +9,5 @@ public interface ICommentRepository
     Task<Comment> AddAsync(Comment comment);
     Task UpdateAsync(Comment comment);
     Task DeleteAsync(string id);
+    Task SoftDeleteByTaskAsync(int taskId);
 }

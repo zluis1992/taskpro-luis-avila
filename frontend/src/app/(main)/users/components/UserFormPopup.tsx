@@ -36,6 +36,7 @@ export function UserFormPopup({
       title="Nuevo Usuario"
       width={440}
       height="auto"
+      container=".taskpro-content"
       onHiding={onHiding}
       showCloseButton
       dragEnabled={false}

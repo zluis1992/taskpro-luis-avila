@@ -14,6 +14,8 @@ public class ProjectServiceTests
 {
     private readonly Mock<IProjectRepository> _projectRepoMock = new();
     private readonly Mock<IUserRepository> _userRepoMock = new();
+    private readonly Mock<ITaskRepository> _taskRepoMock = new();
+    private readonly Mock<ICommentRepository> _commentRepoMock = new();
     private readonly IMapper _mapper;
 
     public ProjectServiceTests()
@@ -25,7 +27,6 @@ public class ProjectServiceTests
     [Fact]
     public async Task CreateAsync_ShouldCreateProjectAndAddOwnerAsMember()
     {
-        // Arrange
         var request = new CreateProjectRequest { Name = "TaskPro", Description = "Test project" };
         var ownerId = 1;
 
@@ -41,12 +42,10 @@ public class ProjectServiceTests
                 Members = new List<ProjectMember>()
             });
 
-        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _mapper);
+        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _taskRepoMock.Object, _commentRepoMock.Object, _mapper);
 
-        // Act
         var result = await service.CreateAsync(request, ownerId);
 
-        // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be(request.Name);
         result.OwnerId.Should().Be(ownerId);
@@ -56,13 +55,11 @@ public class ProjectServiceTests
     [Fact]
     public async Task DeleteAsync_WhenNotOwner_ShouldThrowUnauthorizedException()
     {
-        // Arrange
         var project = new Project { Id = 1, OwnerId = 5 };
         _projectRepoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(project);
 
-        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _mapper);
+        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _taskRepoMock.Object, _commentRepoMock.Object, _mapper);
 
-        // Act & Assert
         await service.Invoking(s => s.DeleteAsync(1, userId: 99))
             .Should().ThrowAsync<UnauthorizedException>();
     }
@@ -70,12 +67,10 @@ public class ProjectServiceTests
     [Fact]
     public async Task GetByIdAsync_WhenProjectNotFound_ShouldThrowNotFoundException()
     {
-        // Arrange
         _projectRepoMock.Setup(r => r.GetByIdWithDetailsAsync(99)).ReturnsAsync((Project?)null);
 
-        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _mapper);
+        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _taskRepoMock.Object, _commentRepoMock.Object, _mapper);
 
-        // Act & Assert
         await service.Invoking(s => s.GetByIdAsync(99, userId: 1))
             .Should().ThrowAsync<NotFoundException>();
     }

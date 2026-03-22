@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Domain.Common;
 using Domain.Interface;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -40,10 +41,28 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public async Task DeleteAsync(T entity)
     {
-        _dbSet.Remove(entity);
+        if (entity is BaseEntity baseEntity)
+        {
+            baseEntity.SoftDelete();
+            _dbSet.Update(entity);
+        }
+        else
+        {
+            _dbSet.Remove(entity);
+        }
         await _context.SaveChangesAsync();
     }
 
     public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate) =>
         await _dbSet.AnyAsync(predicate);
+
+    public async Task SoftDeleteAsync(T entity)
+    {
+        if (entity is BaseEntity baseEntity)
+        {
+            baseEntity.SoftDelete();
+            _dbSet.Update(entity);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

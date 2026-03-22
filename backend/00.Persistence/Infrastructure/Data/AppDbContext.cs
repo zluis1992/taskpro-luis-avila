@@ -1,3 +1,4 @@
+using Domain.Common;
 using Domain.Entity;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,5 +17,18 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                var parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "e");
+                var property = System.Linq.Expressions.Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
+                var filter = System.Linq.Expressions.Expression.Lambda(
+                    System.Linq.Expressions.Expression.Equal(property, System.Linq.Expressions.Expression.Constant(false)),
+                    parameter);
+                modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
+            }
+        }
     }
 }

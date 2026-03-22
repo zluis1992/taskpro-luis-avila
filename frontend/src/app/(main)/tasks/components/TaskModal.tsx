@@ -10,6 +10,7 @@ import Button from 'devextreme-react/button';
 import { TaskItem } from '@/app/core/models/task.model';
 import { TaskFormData } from '../types';
 import { PRIORITY_OPTIONS, STATUS_OPTIONS, STATUS_LABELS, PRIORITY_LABELS, STATUS_COLORS } from '../constants';
+import { TaskComments } from './TaskComments';
 
 export type TaskModalMode = 'view' | 'create' | 'edit';
 
@@ -73,11 +74,13 @@ export function TaskModal({
       title={TITLES[mode]}
       width={520}
       height="auto"
+      maxHeight="90vh"
+      container=".taskpro-content"
       onHiding={onHiding}
       showCloseButton
       dragEnabled={false}
     >
-      <ScrollView>
+      <ScrollView height="100%">
         <div style={{ padding: '16px 20px 24px' }}>
 
           {/* Título */}
@@ -228,6 +231,10 @@ export function TaskModal({
               />
             )}
           </div>
+
+          {isView && task && (
+            <TaskComments taskId={task.id} />
+          )}
 
         </div>
       </ScrollView>

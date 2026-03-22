@@ -33,6 +33,7 @@ export function ProjectFormPopup({
       title="Nuevo Proyecto"
       width={440}
       height="auto"
+      container=".taskpro-content"
       onHiding={onHiding}
       showCloseButton
       dragEnabled={false}

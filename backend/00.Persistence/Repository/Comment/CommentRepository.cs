@@ -15,10 +15,10 @@ public class CommentRepository : ICommentRepository
     }
 
     public async Task<Domain.Entity.Comment?> GetByIdAsync(string id) =>
-        await _collection.Find(c => c.Id == id).FirstOrDefaultAsync();
+        await _collection.Find(c => c.Id == id && !c.IsDeleted).FirstOrDefaultAsync();
 
     public async Task<IEnumerable<Domain.Entity.Comment>> GetByTaskAsync(int taskId) =>
-        await _collection.Find(c => c.TaskId == taskId)
+        await _collection.Find(c => c.TaskId == taskId && !c.IsDeleted)
             .SortByDescending(c => c.CreatedAt)
             .ToListAsync();
 
@@ -36,6 +36,19 @@ public class CommentRepository : ICommentRepository
 
     public async Task DeleteAsync(string id)
     {
-        await _collection.DeleteOneAsync(c => c.Id == id);
+        var filter = Builders<Domain.Entity.Comment>.Filter.Eq(c => c.Id, id);
+        var update = Builders<Domain.Entity.Comment>.Update
+            .Set(c => c.IsDeleted, true)
+            .Set(c => c.DeletedAt, DateTime.UtcNow);
+        await _collection.UpdateOneAsync(filter, update);
+    }
+
+    public async Task SoftDeleteByTaskAsync(int taskId)
+    {
+        var filter = Builders<Domain.Entity.Comment>.Filter.Eq(c => c.TaskId, taskId);
+        var update = Builders<Domain.Entity.Comment>.Update
+            .Set(c => c.IsDeleted, true)
+            .Set(c => c.DeletedAt, DateTime.UtcNow);
+        await _collection.UpdateManyAsync(filter, update);
     }
 }
