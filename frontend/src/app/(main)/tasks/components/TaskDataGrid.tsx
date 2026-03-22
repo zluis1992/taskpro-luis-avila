@@ -43,7 +43,7 @@ export function TaskDataGrid({
       columnAutoWidth
       width="100%"
       height={500}
-      scrolling={{ mode: 'virtual' }}
+      scrolling={{mode: "virtual"}}
       loadPanel={{enabled: loading}}
       noDataText="No hay tareas">
       <Toolbar>
@@ -55,7 +55,6 @@ export function TaskDataGrid({
             onClick={onNew}
           />
         </Item>
-        <Item name="searchPanel" location="after" />
       </Toolbar>
 
       <FilterRow visible />
@@ -63,7 +62,6 @@ export function TaskDataGrid({
 
       <Column dataField="title" caption="Título" width={300} />
       <Column
-        width={300}
         dataField="projectId"
         caption="Proyecto"
         calculateCellValue={(row: TaskItem) =>
@@ -80,6 +78,7 @@ export function TaskDataGrid({
           return <Badge label={label} color={color} />;
         }}
       />
+      <Column dataField="assignedUserName" caption="Asignado a" width={150} />
       <Column
         dataField="dueDate"
         caption="Vencimiento"
@@ -88,7 +87,7 @@ export function TaskDataGrid({
       />
       <Column
         caption="Acciones"
-        width={100}
+        width={120}
         alignment="center"
         allowHiding={false}
         cellRender={(cell) => (

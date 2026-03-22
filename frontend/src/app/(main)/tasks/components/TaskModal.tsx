@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Popup from 'devextreme-react/popup';
 import ScrollView from 'devextreme-react/scroll-view';
 import TextBox from 'devextreme-react/text-box';
@@ -53,16 +52,6 @@ export function TaskModal({
   onEdit,
   onDelete,
 }: Props) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 600px)');
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
   const set = (partial: Partial<TaskFormData>) =>
     onFormChange?.({ ...form!, ...partial });
 
@@ -81,19 +70,15 @@ export function TaskModal({
     <Popup
       key={TITLES[mode]}
       visible={visible}
-      showTitle
       title={TITLES[mode]}
-      width={isMobile ? '95vw' : 520}
+      width={520}
       height="auto"
-      maxHeight="100%"
-      container=".taskpro-content"
-      position={{ my: 'center', at: 'center', of: '.taskpro-content' }}
       onHiding={onHiding}
       showCloseButton
       dragEnabled={false}
     >
-      <ScrollView showScrollbar="onHover" height={isMobile ? 'calc(100dvh - 120px)' : 'calc(100vh - 160px)'}>
-        <div style={{ paddingTop: isMobile ? 12 : 16, paddingRight: isMobile ? 12 : 20, paddingBottom: 24, paddingLeft: isMobile ? 12 : 20, boxSizing: 'border-box' }}>
+      <ScrollView>
+        <div style={{ padding: '16px 20px 24px' }}>
 
           {/* Título */}
           <Field label="Título" required={!isView}>

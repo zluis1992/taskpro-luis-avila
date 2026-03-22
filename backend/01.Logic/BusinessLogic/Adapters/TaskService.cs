@@ -39,6 +39,9 @@ public class TaskService : ITaskService
 
     public async Task<TaskDto> CreateAsync(CreateTaskRequest request, int userId)
     {
+        request.Title = request.Title.Trim();
+        request.Description = request.Description?.Trim() ?? string.Empty;
+
         await EnsureProjectAccessAsync(request.ProjectId, userId);
 
         var task = _mapper.Map<TaskItem>(request);
@@ -52,6 +55,9 @@ public class TaskService : ITaskService
 
     public async Task<TaskDto> UpdateAsync(int taskId, UpdateTaskRequest request, int userId)
     {
+        request.Title = request.Title.Trim();
+        request.Description = request.Description?.Trim() ?? string.Empty;
+
         var task = await _taskRepository.GetByIdWithDetailsAsync(taskId)
             ?? throw new NotFoundException(nameof(TaskItem), taskId);
 

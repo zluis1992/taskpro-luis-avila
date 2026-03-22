@@ -16,13 +16,26 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setError('Todos los campos son obligatorios.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('El formato del correo electrónico no es válido.');
+      return;
+    }
+
     setError('');
     setLoading(true);
     try {
-      await authService.login({ email, password });
+      await authService.login({ email: trimmedEmail, password: trimmedPassword });
       router.push('/dashboard');
     } catch {
-      setError('Email o contraseña incorrectos.');
+      setError('Correo o contraseña incorrectos.');
     } finally {
       setLoading(false);
     }

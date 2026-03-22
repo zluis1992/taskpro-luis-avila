@@ -29,11 +29,13 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
-        var user = await _userRepository.GetByEmailAsync(request.Email)
-            ?? throw new UnauthorizedException("Invalid email or password.");
+        var email = request.Email.Trim().ToLowerInvariant();
 
-        if (!VerifyPassword(request.Password, user.PasswordHash))
-            throw new UnauthorizedException("Invalid email or password.");
+        var user = await _userRepository.GetByEmailAsync(email)
+            ?? throw new UnauthorizedException("Correo o contraseña incorrectos.");
+
+        if (!VerifyPassword(request.Password.Trim(), user.PasswordHash))
+            throw new UnauthorizedException("Correo o contraseña incorrectos.");
 
         var token = GenerateJwtToken(user);
         var expiresAt = DateTime.UtcNow.AddMinutes(
@@ -51,11 +53,15 @@ public class AuthService : IAuthService
 
     public async Task<UserDto> RegisterAsync(CreateUserRequest request)
     {
-        if (await _userRepository.EmailExistsAsync(request.Email))
-            throw new BusinessException("Email is already registered.");
+        var email = request.Email.Trim().ToLowerInvariant();
+
+        if (await _userRepository.EmailExistsAsync(email))
+            throw new BusinessException("Ya existe un usuario registrado con este correo electrónico.");
 
         var user = _mapper.Map<User>(request);
-        user.PasswordHash = HashPassword(request.Password);
+        user.Email = email;
+        user.Name = request.Name.Trim();
+        user.PasswordHash = HashPassword(request.Password.Trim());
 
         var created = await _userRepository.AddAsync(user);
         return _mapper.Map<UserDto>(created);

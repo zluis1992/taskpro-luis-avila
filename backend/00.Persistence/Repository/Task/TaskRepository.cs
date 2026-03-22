@@ -38,6 +38,5 @@ public class TaskRepository : GenericRepository<Domain.Entity.TaskItem>, ITaskRe
         await _dbSet
             .Include(t => t.AssignedUser)
             .Include(t => t.Project)
-            .Where(t => t.Project.OwnerId == userId || t.Project.Members.Any(m => m.UserId == userId))
             .ToListAsync();
 }

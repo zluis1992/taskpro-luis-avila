@@ -27,7 +27,6 @@ public class ProjectRepository : GenericRepository<Domain.Entity.Project>, IProj
         await _dbSet
             .Include(p => p.Owner)
             .Include(p => p.Members)
-            .Where(p => p.OwnerId == userId || p.Members.Any(m => m.UserId == userId))
             .ToListAsync();
 
     public async Task AddMemberAsync(ProjectMember member)

@@ -17,14 +17,32 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedPassword) {
+      setError('Todos los campos son obligatorios.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('El formato del correo electrónico no es válido.');
+      return;
+    }
+    if (trimmedPassword.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
     setError('');
     setLoading(true);
     try {
-      await authService.register({ name, email, password });
-      await authService.login({ email, password });
+      await authService.register({ name: trimmedName, email: trimmedEmail, password: trimmedPassword });
+      await authService.login({ email: trimmedEmail, password: trimmedPassword });
       router.push('/dashboard');
     } catch {
-      setError('El registro falló. Por favor intenta de nuevo.');
+      setError('El registro falló. Verifique que el correo no esté en uso.');
     } finally {
       setLoading(false);
     }

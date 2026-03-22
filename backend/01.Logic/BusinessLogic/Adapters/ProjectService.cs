@@ -40,6 +40,9 @@ public class ProjectService : IProjectService
 
     public async Task<ProjectDto> CreateAsync(CreateProjectRequest request, int ownerId)
     {
+        request.Name = request.Name.Trim();
+        request.Description = request.Description?.Trim() ?? string.Empty;
+
         var project = _mapper.Map<Project>(request);
         project.OwnerId = ownerId;
 
@@ -52,6 +55,9 @@ public class ProjectService : IProjectService
 
     public async Task<ProjectDto> UpdateAsync(int id, UpdateProjectRequest request, int userId)
     {
+        request.Name = request.Name.Trim();
+        request.Description = request.Description?.Trim() ?? string.Empty;
+
         var project = await _projectRepository.GetByIdWithDetailsAsync(id)
             ?? throw new NotFoundException(nameof(Project), id);
 
