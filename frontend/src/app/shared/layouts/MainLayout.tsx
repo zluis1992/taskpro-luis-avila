@@ -41,7 +41,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     () => [
       { id: 'dashboard', text: 'Dashboard', path: '/dashboard', icon: 'home' },
       { id: 'projects', text: 'Proyectos', path: '/projects', icon: 'folder' },
-      { id: 'tasks', text: 'Tareas', path: '/tasks', icon: 'tasklist' },
+      { id: 'tasks', text: 'Tareas', path: '/tasks', icon: 'checklist' },
       { id: 'users', text: 'Usuarios', path: '/users', icon: 'user' },
     ],
     [],
