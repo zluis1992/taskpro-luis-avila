@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Auto Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get last tag
+        id: last_tag
+        run: |
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Calculate next version
+        id: version
+        run: |
+          LAST_TAG="${{ steps.last_tag.outputs.tag }}"
+          COMMITS=$(git log $LAST_TAG..HEAD --oneline 2>/dev/null || git log --oneline)
+
+          if echo "$COMMITS" | grep -qE "^[a-f0-9]+ (feat!)!:"; then
+            BUMP="major"
+          elif echo "$COMMITS" | grep -qE "^[a-f0-9]+ feat:"; then
+            BUMP="minor"
+          elif echo "$COMMITS" | grep -qE "^[a-f0-9]+ fix:"; then
+            BUMP="patch"
+          else
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "No version bump needed"
+            exit 0
+          fi
+
+          VERSION="${LAST_TAG#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          case $BUMP in
+            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+          esac
+
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "bump=$BUMP" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION ($BUMP)"
+
+      - name: Generate changelog
+        if: steps.version.outputs.skip != 'true'
+        id: changelog
+        run: |
+          LAST_TAG="${{ steps.last_tag.outputs.tag }}"
+          CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" 2>/dev/null || git log --pretty=format:"- %s (%h)")
+
+          # Build readable changelog
+          {
+            echo "changelog<<EOF"
+            echo "## ${{ steps.version.outputs.version }}"
+            echo ""
+            echo "### Nuevas funcionalidades"
+            echo "$CHANGELOG" | grep -E "^- feat:" | sed 's/^- feat://' || echo "- Ninguna"
+            echo ""
+            echo "### Correcciones"
+            echo "$CHANGELOG" | grep -E "^- fix:" | sed 's/^- fix://' || echo "- Ninguna"
+            echo ""
+            echo "### Otros cambios"
+            echo "$CHANGELOG" | grep -vE "^- (feat|fix):" | sed 's/^- //' || echo "- Ninguno"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Update version.json
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          VERSION_NUM="${VERSION#v}"
+          DATE=$(date +%Y-%m-%d)
+          HASH=$(git rev-parse --short HEAD)
+
+          cat > version.json << EOF
+          {
+            "version": "$VERSION_NUM",
+            "buildDate": "$DATE",
+            "commitHash": "$HASH"
+          }
+          EOF
+
+      - name: Create tag and release
+        if: steps.version.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.json
+          git commit -m "chore: bump version to $VERSION" --allow-empty
+          git push
+
+          git tag "$VERSION"
+          git push origin "$VERSION"
+
+          gh release create "$VERSION" \
+            --title "$VERSION" \
+            --notes "${{ steps.changelog.outputs.changelog }}"
