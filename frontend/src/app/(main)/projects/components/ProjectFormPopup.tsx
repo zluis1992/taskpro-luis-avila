@@ -8,7 +8,6 @@ import Button from 'devextreme-react/button';
 
 type Props = {
   visible: boolean;
-  isEditing: boolean;
   name: string;
   description: string;
   saving: boolean;
@@ -20,7 +19,6 @@ type Props = {
 
 export function ProjectFormPopup({
   visible,
-  isEditing,
   name,
   description,
   saving,
@@ -32,8 +30,7 @@ export function ProjectFormPopup({
   return (
     <Popup
       visible={visible}
-      showTitle
-      title={isEditing ? 'Editar Proyecto' : 'Nuevo Proyecto'}
+      title="Nuevo Proyecto"
       width={440}
       height="auto"
       container=".taskpro-content"
@@ -66,7 +63,7 @@ export function ProjectFormPopup({
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
-              text={saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear Proyecto'}
+              text={saving ? 'Guardando...' : 'Crear Proyecto'}
               type="default"
               icon="save"
               disabled={saving || !name.trim()}
