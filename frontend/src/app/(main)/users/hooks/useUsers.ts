@@ -13,14 +13,11 @@ export function useUsers() {
   const [saving, setSaving] = useState(false);
 
   const [popupVisible, setPopupVisible] = useState(false);
-  const [popupMode, setPopupMode] = useState<'create' | 'edit'>('create');
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [popupMode, setPopupMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const [detailVisible, setDetailVisible] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -35,12 +32,11 @@ export function useUsers() {
   useEffect(() => { void loadData(); }, [loadData]);
 
   function handleNew() {
-    setEditingUser(null);
+    setSelectedUser(null);
     setPopupMode('create');
     setName('');
     setEmail('');
     setPassword('');
-    setDetailVisible(false);
     setPopupVisible(true);
   }
 
@@ -67,12 +63,12 @@ export function useUsers() {
 
   function handleView(user: User) {
     setSelectedUser(user);
-    setDetailVisible(true);
+    setPopupMode('view');
+    setPopupVisible(true);
   }
 
   function handleEdit(user: User) {
-    setDetailVisible(false);
-    setEditingUser(user);
+    setSelectedUser(user);
     setPopupMode('edit');
     setName(user.name);
     setEmail(user.email);
@@ -81,7 +77,7 @@ export function useUsers() {
   }
 
   async function handleUpdate() {
-    if (!editingUser || !name.trim() || !email.trim()) return;
+    if (!selectedUser || !name.trim() || !email.trim()) return;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       notify({ message: 'El formato del correo electrónico no es válido.', minWidth: 280 }, 'warning', 3000);
@@ -98,7 +94,7 @@ export function useUsers() {
         email: email.trim(),
       };
       if (password.trim()) request.password = password.trim();
-      await userService.update(editingUser.id, request);
+      await userService.update(selectedUser.id, request);
       setPopupVisible(false);
       await loadData();
     } finally {
@@ -113,7 +109,7 @@ export function useUsers() {
     );
     if (!result) return;
     await userService.remove(id);
-    setDetailVisible(false);
+    setPopupVisible(false);
     await loadData();
   }
 
@@ -123,6 +119,7 @@ export function useUsers() {
     saving,
     popupVisible,
     popupMode,
+    selectedUser,
     name,
     email,
     password,
@@ -130,9 +127,6 @@ export function useUsers() {
     setEmail,
     setPassword,
     setPopupVisible,
-    detailVisible,
-    selectedUser,
-    setDetailVisible,
     handleNew,
     handleCreate,
     handleUpdate,

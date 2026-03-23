@@ -16,19 +16,24 @@ export default function ProjectsPage() {
         projects={p.projects}
         loading={p.loading}
         onNew={p.openNewProject}
-        onRowClick={p.handleRowClick}
+        onView={p.handleView}
+        onEdit={p.openEditProject}
         onDelete={p.handleDelete}
       />
 
       <ProjectFormPopup
         visible={p.popupVisible}
+        mode={p.popupMode}
+        project={p.selectedProject}
         name={p.name}
         description={p.description}
         saving={p.saving}
         onNameChange={p.setName}
         onDescriptionChange={p.setDescription}
         onHiding={() => p.setPopupVisible(false)}
-        onSave={p.handleCreate}
+        onSave={p.handleSave}
+        onEdit={p.openEditProject}
+        onDelete={p.handleDelete}
       />
     </div>
   );

@@ -1,26 +1,25 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { confirm as dxConfirm } from 'devextreme/ui/dialog';
 import { Project } from '@/app/core/models/project.model';
 import { projectService } from '@/app/core/services/project.service';
 
 export function useProjects() {
-  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [popupVisible, setPopupVisible] = useState(false);
+  const [popupMode, setPopupMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await projectService.getAll();
-      setProjects(data);
+      setProjects(await projectService.getAll());
     } finally {
       setLoading(false);
     }
@@ -29,16 +28,36 @@ export function useProjects() {
   useEffect(() => { void loadData(); }, [loadData]);
 
   function openNewProject() {
+    setSelectedProject(null);
+    setPopupMode('create');
     setName('');
     setDescription('');
     setPopupVisible(true);
   }
 
-  async function handleCreate() {
+  function handleView(project: Project) {
+    setSelectedProject(project);
+    setPopupMode('view');
+    setPopupVisible(true);
+  }
+
+  function openEditProject(project: Project) {
+    setSelectedProject(project);
+    setPopupMode('edit');
+    setName(project.name);
+    setDescription(project.description ?? '');
+    setPopupVisible(true);
+  }
+
+  async function handleSave() {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      await projectService.create({ name, description });
+      if (popupMode === 'edit' && selectedProject) {
+        await projectService.update(selectedProject.id, { name, description });
+      } else {
+        await projectService.create({ name, description });
+      }
       setPopupVisible(false);
       await loadData();
     } finally {
@@ -53,11 +72,8 @@ export function useProjects() {
     );
     if (!result) return;
     await projectService.remove(id);
+    setPopupVisible(false);
     await loadData();
-  }
-
-  function handleRowClick(id: number) {
-    router.push(`/projects/${id}`);
   }
 
   return {
@@ -65,14 +81,17 @@ export function useProjects() {
     loading,
     saving,
     popupVisible,
+    popupMode,
+    selectedProject,
     name,
     description,
     setName,
     setDescription,
     setPopupVisible,
     openNewProject,
-    handleCreate,
+    handleView,
+    openEditProject,
+    handleSave,
     handleDelete,
-    handleRowClick,
   };
 }

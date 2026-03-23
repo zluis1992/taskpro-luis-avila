@@ -8,11 +8,12 @@ type Props = {
   projects: Project[];
   loading: boolean;
   onNew: () => void;
-  onRowClick: (id: number) => void;
+  onView: (project: Project) => void;
+  onEdit: (project: Project) => void;
   onDelete: (id: number, name: string) => void;
 };
 
-export function ProjectDataGrid({ projects, loading, onNew, onRowClick, onDelete }: Props) {
+export function ProjectDataGrid({ projects, loading, onNew, onView, onEdit, onDelete }: Props) {
   return (
     <DataGrid
       dataSource={projects}
@@ -37,14 +38,6 @@ export function ProjectDataGrid({ projects, loading, onNew, onRowClick, onDelete
 
       <Column dataField="name" caption="Nombre" minWidth={150} />
       <Column dataField="description" caption="Descripción" minWidth={200} />
-      <Column dataField="ownerName" caption="Propietario" width={160} />
-      <Column
-        dataField="members"
-        caption="Miembros"
-        width={100}
-        alignment="center"
-        calculateCellValue={(row: Project) => row.members?.length ?? 0}
-      />
       <Column dataField="createdAt" caption="Creado" dataType="date" width={120} />
       <Column
         caption="Acciones"
@@ -57,13 +50,13 @@ export function ProjectDataGrid({ projects, loading, onNew, onRowClick, onDelete
               icon="eyeopen"
               hint="Ver detalle"
               stylingMode="text"
-              onClick={(e) => { e.event?.stopPropagation(); onRowClick(cell.data.id); }}
+              onClick={(e) => { e.event?.stopPropagation(); onView(cell.data as Project); }}
             />
             <Button
               icon="edit"
               hint="Editar"
               stylingMode="text"
-              onClick={(e) => { e.event?.stopPropagation(); onRowClick(cell.data.id); }}
+              onClick={(e) => { e.event?.stopPropagation(); onEdit(cell.data as Project); }}
             />
             <Button
               icon="trash"

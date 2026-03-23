@@ -76,10 +76,6 @@ export function useDashboard() {
     })
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
 
-  function goToProject(id: number) {
-    router.push(`/projects/${id}`);
-  }
-
   function goToTasks() {
     router.push('/tasks');
   }
@@ -93,7 +89,6 @@ export function useDashboard() {
     tasksByProject,
     upcomingTasks,
     projectMap,
-    goToProject,
     goToTasks,
   };
 }
