@@ -10,9 +10,6 @@ public class DefaultUsersSeeder : IDatabaseSeeder
 
     public async Task SeedAsync(AppDbContext db, IConfiguration configuration, IHostEnvironment environment, CancellationToken cancellationToken)
     {
-        if (!environment.IsDevelopment())
-            return;
-
         await AppDbSeeder.SeedUsersAsync(
             db,
             [

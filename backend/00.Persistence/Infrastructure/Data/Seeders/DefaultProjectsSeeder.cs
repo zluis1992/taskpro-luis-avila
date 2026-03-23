@@ -13,9 +13,6 @@ public class DefaultProjectsSeeder : IDatabaseSeeder
 
     public async Task SeedAsync(AppDbContext db, IConfiguration configuration, IHostEnvironment environment, CancellationToken cancellationToken)
     {
-        if (!environment.IsDevelopment())
-            return;
-
         if (await db.Projects.AnyAsync(cancellationToken))
             return;
 
