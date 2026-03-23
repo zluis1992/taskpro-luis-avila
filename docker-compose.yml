@@ -33,8 +33,8 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: taskpro-backend
     ports:
       - "5000:5000"

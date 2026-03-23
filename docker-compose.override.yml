@@ -1,6 +1,10 @@
 # Overrides para desarrollo local — hot reload y puertos adicionales
+# Ejecutar: docker compose up --build
 services:
   backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     volumes:
