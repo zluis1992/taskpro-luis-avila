@@ -3,6 +3,9 @@ name: Release
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'version.json'
+      - 'backend/version.json'
 
 permissions:
   contents: write
@@ -11,6 +14,7 @@ jobs:
   release:
     name: Auto Release
     runs-on: ubuntu-latest
+    if: "!startsWith(github.event.head_commit.message, 'chore: bump version')"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -108,6 +112,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add version.json backend/version.json
           git commit -m "chore: bump version to $VERSION" --allow-empty
+          git pull --rebase origin main
           git push
 
           git tag "$VERSION"
