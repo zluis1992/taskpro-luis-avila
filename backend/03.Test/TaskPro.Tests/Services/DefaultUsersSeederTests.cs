@@ -12,7 +12,7 @@ namespace TaskPro.Tests.Services;
 public class DefaultUsersSeederTests
 {
     [Fact]
-    public async Task SeedAsync_WhenNotDevelopment_ShouldDoNothing()
+    public async Task SeedAsync_WhenProductionAndEmpty_ShouldSeedDefaultUsers()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -25,11 +25,11 @@ public class DefaultUsersSeederTests
         var seeder = new DefaultUsersSeeder();
         await seeder.SeedAsync(db, configuration, environment, CancellationToken.None);
 
-        (await db.Users.CountAsync()).Should().Be(0);
+        (await db.Users.CountAsync()).Should().Be(2);
     }
 
     [Fact]
-    public async Task SeedAsync_WhenDevelopmentAndEmpty_ShouldSeedDefaultUsers()
+    public async Task SeedAsync_WhenEmptyDatabase_ShouldSeedDefaultUsers()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
