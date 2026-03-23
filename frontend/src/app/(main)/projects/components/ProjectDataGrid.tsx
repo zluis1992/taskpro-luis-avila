@@ -8,11 +8,12 @@ type Props = {
   projects: Project[];
   loading: boolean;
   onNew: () => void;
-  onRowClick: (id: number) => void;
+  onView: (id: number) => void;
+  onEdit: (project: Project) => void;
   onDelete: (id: number, name: string) => void;
 };
 
-export function ProjectDataGrid({ projects, loading, onNew, onRowClick, onDelete }: Props) {
+export function ProjectDataGrid({ projects, loading, onNew, onView, onEdit, onDelete }: Props) {
   return (
     <DataGrid
       dataSource={projects}
@@ -57,13 +58,13 @@ export function ProjectDataGrid({ projects, loading, onNew, onRowClick, onDelete
               icon="eyeopen"
               hint="Ver detalle"
               stylingMode="text"
-              onClick={(e) => { e.event?.stopPropagation(); onRowClick(cell.data.id); }}
+              onClick={(e) => { e.event?.stopPropagation(); onView(cell.data.id); }}
             />
             <Button
               icon="edit"
               hint="Editar"
               stylingMode="text"
-              onClick={(e) => { e.event?.stopPropagation(); onRowClick(cell.data.id); }}
+              onClick={(e) => { e.event?.stopPropagation(); onEdit(cell.data as Project); }}
             />
             <Button
               icon="trash"

@@ -13,6 +13,7 @@ export function useProjects() {
   const [saving, setSaving] = useState(false);
 
   const [popupVisible, setPopupVisible] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
 
@@ -29,16 +30,28 @@ export function useProjects() {
   useEffect(() => { void loadData(); }, [loadData]);
 
   function openNewProject() {
+    setEditingProject(null);
     setName('');
     setDescription('');
     setPopupVisible(true);
   }
 
-  async function handleCreate() {
+  function openEditProject(project: Project) {
+    setEditingProject(project);
+    setName(project.name);
+    setDescription(project.description ?? '');
+    setPopupVisible(true);
+  }
+
+  async function handleSave() {
     if (!name.trim()) return;
     setSaving(true);
     try {
-      await projectService.create({ name, description });
+      if (editingProject) {
+        await projectService.update(editingProject.id, { name, description });
+      } else {
+        await projectService.create({ name, description });
+      }
       setPopupVisible(false);
       await loadData();
     } finally {
@@ -65,13 +78,15 @@ export function useProjects() {
     loading,
     saving,
     popupVisible,
+    editingProject,
     name,
     description,
     setName,
     setDescription,
     setPopupVisible,
     openNewProject,
-    handleCreate,
+    openEditProject,
+    handleSave,
     handleDelete,
     handleRowClick,
   };
