@@ -1,8 +1,11 @@
 name: Build & Push Images
 
 on:
-  push:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
     branches: [main]
+  push:
     tags: ['v*']
 
 env:
@@ -13,6 +16,9 @@ jobs:
   build-backend:
     name: Backend
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' ||
+      github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
       packages: write
@@ -51,6 +57,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    if: >-
+      github.event_name == 'push' ||
+      github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
 
