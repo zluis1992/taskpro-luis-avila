@@ -80,42 +80,4 @@ public class ProjectsController : BaseController
         return SuccessNoContent("Proyecto eliminado correctamente");
     }
 
-    /// <summary>
-    /// Obtiene los miembros de un proyecto.
-    /// </summary>
-    /// <param name="id">Identificador del proyecto.</param>
-    /// <returns>Lista de usuarios miembros.</returns>
-    [HttpGet("{id:int}/members")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
-    public async Task<IActionResult> GetMembers(int id) =>
-        Success(await _projectService.GetMembersAsync(id, CurrentUserId));
-
-    /// <summary>
-    /// Agrega un miembro al proyecto.
-    /// </summary>
-    /// <param name="id">Identificador del proyecto.</param>
-    /// <param name="memberId">Identificador del usuario a agregar.</param>
-    [HttpPost("{id:int}/members/{memberId:int}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
-    public async Task<IActionResult> AddMember(int id, int memberId)
-    {
-        await _projectService.AddMemberAsync(id, memberId, CurrentUserId);
-        return SuccessNoContent("Miembro agregado correctamente");
-    }
-
-    /// <summary>
-    /// Elimina un miembro del proyecto.
-    /// </summary>
-    /// <param name="id">Identificador del proyecto.</param>
-    /// <param name="memberId">Identificador del usuario a eliminar.</param>
-    [HttpDelete("{id:int}/members/{memberId:int}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 404)]
-    public async Task<IActionResult> RemoveMember(int id, int memberId)
-    {
-        await _projectService.RemoveMemberAsync(id, memberId, CurrentUserId);
-        return SuccessNoContent("Miembro eliminado correctamente");
-    }
 }
