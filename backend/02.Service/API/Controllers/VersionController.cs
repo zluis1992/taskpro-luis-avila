@@ -23,13 +23,26 @@ public class VersionController : BaseController
     [ProducesResponseType(typeof(ApiResponse<object>), 200)]
     public IActionResult GetVersion()
     {
-        var versionPath = Path.Combine(_env.ContentRootPath, "..", "version.json");
+        var fallback = new { version = "1.0.0", buildDate = "", commitHash = "" };
 
-        if (!System.IO.File.Exists(versionPath))
-            return Success(new { version = "1.0.0", buildDate = "", commitHash = "" });
+        // Buscar version.json en múltiples ubicaciones posibles
+        string[] candidates =
+        [
+            "/version.json",                                          // Docker: copiado a raíz del contenedor
+            Path.Combine(_env.ContentRootPath, "..", "version.json"), // Docker legacy / local
+            Path.Combine(_env.ContentRootPath, "..", "..", "version.json"), // dotnet run desde backend/
+        ];
 
-        var json = System.IO.File.ReadAllText(versionPath);
-        var data = JsonSerializer.Deserialize<JsonElement>(json);
-        return Success(data);
+        foreach (var path in candidates)
+        {
+            if (System.IO.File.Exists(path))
+            {
+                var json = System.IO.File.ReadAllText(path);
+                var data = JsonSerializer.Deserialize<JsonElement>(json);
+                return Success(data);
+            }
+        }
+
+        return Success(fallback);
     }
 }

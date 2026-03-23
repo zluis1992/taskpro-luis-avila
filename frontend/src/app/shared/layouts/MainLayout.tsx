@@ -157,7 +157,14 @@ export function MainLayout({children}: {children: React.ReactNode}) {
         <div className="taskpro-main">{children}</div>
         <footer className="taskpro-footer">
           <span>© 2026 TaskPro. Created with ❤️ By Luis A.</span>
-          <span className="taskpro-footer-version">{appVersion}</span>
+          <a
+            href="https://github.com/zluis1992/taskpro-luis-avila/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="taskpro-footer-version"
+          >
+            {appVersion}
+          </a>
         </footer>
       </div>
     </div>
