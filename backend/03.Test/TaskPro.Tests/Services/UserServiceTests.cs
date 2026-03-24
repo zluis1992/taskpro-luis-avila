@@ -13,6 +13,7 @@ namespace TaskPro.Tests.Services;
 public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepoMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly IMapper _mapper;
 
     public UserServiceTests()
@@ -21,7 +22,7 @@ public class UserServiceTests
         _mapper = config.CreateMapper();
     }
 
-    private UserService CreateService() => new(_userRepoMock.Object, _mapper);
+    private UserService CreateService() => new(_userRepoMock.Object, _unitOfWorkMock.Object, _mapper);
 
     [Fact]
     public async Task GetAllAsync_ShouldReturnAllUsers()

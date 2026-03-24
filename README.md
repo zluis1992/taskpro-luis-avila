@@ -161,7 +161,7 @@ backend/
 │   │   ├── Validators/                ← FluentValidation validators
 │   │   └── DTOs/                      ← Data Transfer Objects
 │   └── Repository/                    ← Implementaciones de repositorios (adaptadores de persistencia)
-│       ├── Base/                      ← GenericRepository<T>
+│       ├── Base/                      ← GenericRepository<T>, UnitOfWork
 │       ├── User/                      ← UserRepository
 │       ├── Project/                   ← ProjectRepository
 │       ├── Task/                      ← TaskRepository
@@ -172,7 +172,7 @@ backend/
 │   │   ├── Entity/                    ← User, Project, ProjectMember, TaskItem, Comment
 │   │   ├── Enum/                      ← UserRole, TaskStatus, TaskPriority
 │   │   ├── Exceptions/                ← NotFoundException, UnauthorizedException, BusinessException
-│   │   └── Interface/                 ← IGenericRepository<T>, IUserRepository, IProjectRepository, etc.
+│   │   └── Interface/                 ← IGenericRepository<T>, IUnitOfWork, IUserRepository, IProjectRepository, etc.
 │   └── BusinessLogic/                 ← Servicios de negocio (puertos + adaptadores)
 │       ├── Ports/                     ← IAuthService, IUserService, IProjectService, ITaskService, ICommentService
 │       └── Adapters/                  ← AuthService, UserService, ProjectService, TaskService, CommentService
@@ -213,7 +213,7 @@ La configuración centralizada de DI reside en `ServiceCollectionExtensions.cs`.
 ```csharp
 builder.Services.AddDatabase(builder.Configuration);        // EF Core + MongoDB
 builder.Services.AddDatabaseInitialization();               // Seeders
-builder.Services.AddRepositories();                         // Repositorios
+builder.Services.AddRepositories();                         // Repositorios + UnitOfWork
 builder.Services.AddBusinessServices();                     // Servicios de negocio
 builder.Services.AddJwtAuthentication(builder.Configuration); // JWT
 builder.Services.AddValidators();                           // FluentValidation
@@ -233,6 +233,61 @@ Se implementa un **repositorio genérico** (`GenericRepository<T>`) que proporci
 | `IProjectRepository`    | `ProjectRepository`    | `GetByIdWithDetailsAsync`, `GetByOwnerAsync`, `GetByMemberAsync`, `AddMemberAsync`, `RemoveMemberAsync` |
 | `ITaskRepository`       | `TaskRepository`       | `GetByIdWithDetailsAsync`, `GetByProjectAsync`, `GetByAssignedUserAsync`, `GetByStatusAsync`            |
 | `ICommentRepository`    | `CommentRepository`    | CRUD MongoDB directo con `IMongoCollection<Comment>`                                                    |
+
+Los repositorios **no llaman `SaveChangesAsync` directamente**; solo modifican el `ChangeTracker` de EF Core. La persistencia recae en el Unit of Work.
+
+### Patrón Unit of Work
+
+Se implementa el patrón **Unit of Work** para centralizar la gestión de transacciones y garantizar la atomicidad de las operaciones. La interfaz `IUnitOfWork` y su implementación `UnitOfWork` viven en `Domain/Interface` y `Repository/Base` respectivamente.
+
+**Interfaz `IUnitOfWork`:**
+
+```csharp
+public interface IUnitOfWork : IDisposable
+{
+    Task<int> CompleteAsync();              // Guarda cambios (SaveChangesAsync)
+    Task BeginTransactionAsync();           // Inicia transacción explícita
+    Task CommitTransactionAsync();          // Confirma transacción
+    Task RollbackTransactionAsync();        // Revierte transacción
+}
+```
+
+**Responsabilidades:**
+
+| Método                       | Descripción                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------- |
+| `CompleteAsync()`            | Ejecuta `context.SaveChangesAsync()`, persistiendo todos los cambios pendientes |
+| `BeginTransactionAsync()`    | Inicia una transacción de base de datos explícita                               |
+| `CommitTransactionAsync()`   | Guarda cambios y confirma la transacción                                        |
+| `RollbackTransactionAsync()` | Revierte la transacción en caso de error                                        |
+
+**Flujo de uso en servicios:**
+
+```csharp
+public class ProjectService : IProjectService
+{
+    private readonly IProjectRepository _projectRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public async Task<ProjectDto> CreateAsync(CreateProjectRequest request, int ownerId)
+    {
+        var project = _mapper.Map<Project>(request);
+        var created = await _projectRepository.AddAsync(project);          // Solo agrega al ChangeTracker
+        await _projectRepository.AddMemberAsync(new ProjectMember { ... }); // Solo agrega al ChangeTracker
+        await _unitOfWork.CompleteAsync();                                 // Persiste AMBOS cambios en una sola transacción
+        return _mapper.Map<ProjectDto>(created);
+    }
+}
+```
+
+**Ventajas sobre el enfoque anterior:**
+
+1. **Atomicidad**: Múltiples operaciones se persisten en una sola llamada a `SaveChangesAsync`, garantizando que todas se completen o ninguna.
+2. **Control transaccional**: Operaciones críticas pueden usar `BeginTransactionAsync` / `CommitTransactionAsync` para rollback automático en caso de error.
+3. **Separación de responsabilidades**: Los repositorios solo manejan lectura/escritura en memoria; el Unit of Work controla la persistencia.
+4. **Testabilidad**: En tests unitarios, se puede mock `IUnitOfWork` sin necesidad de base de datos real.
+
+**Excepción — MongoDB:** El `CommentRepository` persiste directamente porque MongoDB no usa el ChangeTracker de EF Core. Cada operación `InsertOneAsync`, `ReplaceOneAsync` o `UpdateManyAsync` se ejecuta inmediatamente.
 
 ### Soft Delete
 
@@ -507,7 +562,7 @@ La autenticación utiliza **JWT Bearer Tokens** con configuración estricta de v
 | **O** — Abierto/Cerrado           | `IGenericRepository<T>` extensible sin modificar existentes. `IDatabaseSeeder` permite añadir seeders sin tocar el runner. AutoMapper extensible sin modificar profiles existentes. |
 | **L** — Sustitución de Liskov     | Repositorios específicos sustituyen a `IGenericRepository<T>`. `CommentRepository` implementa su propia interfaz por la naturaleza diferente de MongoDB.                            |
 | **I** — Segregación de Interfaces | Interfaces específicas por entidad (`IUserRepository`, `IProjectService`). `ICommentRepository` no hereda de `IGenericRepository` porque sus operaciones difieren (string IDs).     |
-| **D** — Inversión de Dependencias | Controllers dependen de interfaces de servicio. Servicios dependen de interfaces de repositorio. Todo registrado vía DI.                                                            |
+| **D** — Inversión de Dependencias | Controllers dependen de interfaces de servicio. Servicios dependen de interfaces de repositorio y `IUnitOfWork`. Todo registrado vía DI.                                            |
 
 ### KISS (Keep It Simple, Stupid)
 

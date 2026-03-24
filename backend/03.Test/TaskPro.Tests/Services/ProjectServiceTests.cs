@@ -16,6 +16,7 @@ public class ProjectServiceTests
     private readonly Mock<IUserRepository> _userRepoMock = new();
     private readonly Mock<ITaskRepository> _taskRepoMock = new();
     private readonly Mock<ICommentRepository> _commentRepoMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly IMapper _mapper;
 
     public ProjectServiceTests()
@@ -42,7 +43,7 @@ public class ProjectServiceTests
                 Members = new List<ProjectMember>()
             });
 
-        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _taskRepoMock.Object, _commentRepoMock.Object, _mapper);
+        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _taskRepoMock.Object, _commentRepoMock.Object, _unitOfWorkMock.Object, _mapper);
 
         var result = await service.CreateAsync(request, ownerId);
 
@@ -58,7 +59,7 @@ public class ProjectServiceTests
         var project = new Project { Id = 1, OwnerId = 5 };
         _projectRepoMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(project);
 
-        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _taskRepoMock.Object, _commentRepoMock.Object, _mapper);
+        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _taskRepoMock.Object, _commentRepoMock.Object, _unitOfWorkMock.Object, _mapper);
 
         await service.Invoking(s => s.DeleteAsync(1, userId: 99))
             .Should().ThrowAsync<UnauthorizedException>();
@@ -69,7 +70,7 @@ public class ProjectServiceTests
     {
         _projectRepoMock.Setup(r => r.GetByIdWithDetailsAsync(99)).ReturnsAsync((Project?)null);
 
-        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _taskRepoMock.Object, _commentRepoMock.Object, _mapper);
+        var service = new ProjectService(_projectRepoMock.Object, _userRepoMock.Object, _taskRepoMock.Object, _commentRepoMock.Object, _unitOfWorkMock.Object, _mapper);
 
         await service.Invoking(s => s.GetByIdAsync(99, userId: 1))
             .Should().ThrowAsync<NotFoundException>();

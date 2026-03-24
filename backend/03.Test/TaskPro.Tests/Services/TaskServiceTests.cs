@@ -15,6 +15,7 @@ public class TaskServiceTests
     private readonly Mock<ITaskRepository> _taskRepoMock = new();
     private readonly Mock<IProjectRepository> _projectRepoMock = new();
     private readonly Mock<ICommentRepository> _commentRepoMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly IMapper _mapper;
 
     public TaskServiceTests()
@@ -24,7 +25,7 @@ public class TaskServiceTests
     }
 
     private TaskService CreateService() =>
-        new(_taskRepoMock.Object, _projectRepoMock.Object, _commentRepoMock.Object, _mapper);
+        new(_taskRepoMock.Object, _projectRepoMock.Object, _commentRepoMock.Object, _unitOfWorkMock.Object, _mapper);
 
     private static Project CreateProject(int id, int ownerId) =>
         new() { Id = id, OwnerId = ownerId, Members = new List<ProjectMember>() };

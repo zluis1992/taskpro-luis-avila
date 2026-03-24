@@ -15,6 +15,7 @@ namespace TaskPro.Tests.Services;
 public class AuthServiceTests
 {
     private readonly Mock<IUserRepository> _userRepoMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly IMapper _mapper;
     private readonly IConfiguration _config;
 
@@ -43,7 +44,7 @@ public class AuthServiceTests
         _userRepoMock.Setup(r => r.AddAsync(It.IsAny<User>()))
             .ReturnsAsync((User u) => { u.Id = 1; return u; });
 
-        var service = new AuthService(_userRepoMock.Object, _mapper, _config);
+        var service = new AuthService(_userRepoMock.Object, _unitOfWorkMock.Object, _mapper, _config);
 
         // Act
         var result = await service.RegisterAsync(request);
@@ -61,7 +62,7 @@ public class AuthServiceTests
         var request = new CreateUserRequest { Name = "Luis", Email = "existing@test.com", Password = "secret123" };
         _userRepoMock.Setup(r => r.EmailExistsAsync(request.Email)).ReturnsAsync(true);
 
-        var service = new AuthService(_userRepoMock.Object, _mapper, _config);
+        var service = new AuthService(_userRepoMock.Object, _unitOfWorkMock.Object, _mapper, _config);
 
         // Act & Assert
         await service.Invoking(s => s.RegisterAsync(request))
@@ -76,7 +77,7 @@ public class AuthServiceTests
         var request = new LoginRequest { Email = "notfound@test.com", Password = "pass" };
         _userRepoMock.Setup(r => r.GetByEmailAsync(request.Email)).ReturnsAsync((User?)null);
 
-        var service = new AuthService(_userRepoMock.Object, _mapper, _config);
+        var service = new AuthService(_userRepoMock.Object, _unitOfWorkMock.Object, _mapper, _config);
 
         // Act & Assert
         await service.Invoking(s => s.LoginAsync(request))
@@ -94,7 +95,7 @@ public class AuthServiceTests
         var request = new LoginRequest { Email = user.Email, Password = password };
         _userRepoMock.Setup(r => r.GetByEmailAsync(request.Email)).ReturnsAsync(user);
 
-        var service = new AuthService(_userRepoMock.Object, _mapper, _config);
+        var service = new AuthService(_userRepoMock.Object, _unitOfWorkMock.Object, _mapper, _config);
 
         // Act
         var result = await service.LoginAsync(request);

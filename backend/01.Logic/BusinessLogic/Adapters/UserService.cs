@@ -9,11 +9,13 @@ namespace BusinessLogic.Adapters;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public UserService(IUserRepository userRepository, IMapper mapper)
+    public UserService(IUserRepository userRepository, IUnitOfWork unitOfWork, IMapper mapper)
     {
         _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -46,6 +48,7 @@ public class UserService : IUserService
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12);
 
         await _userRepository.UpdateAsync(user);
+        await _unitOfWork.CompleteAsync();
         return _mapper.Map<UserDto>(user);
     }
 
@@ -54,5 +57,6 @@ public class UserService : IUserService
         var user = await _userRepository.GetByIdAsync(id)
             ?? throw new NotFoundException(nameof(Domain.Entity.User), id);
         await _userRepository.DeleteAsync(user);
+        await _unitOfWork.CompleteAsync();
     }
 }

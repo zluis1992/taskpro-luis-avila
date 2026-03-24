@@ -33,17 +33,16 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     public async Task<T> AddAsync(T entity)
     {
         await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
         return entity;
     }
 
-    public async Task UpdateAsync(T entity)
+    public Task UpdateAsync(T entity)
     {
         _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(T entity)
+    public Task DeleteAsync(T entity)
     {
         if (entity is BaseEntity baseEntity)
         {
@@ -54,19 +53,19 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         {
             _dbSet.Remove(entity);
         }
-        await _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
     public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate) =>
         await _dbSet.AnyAsync(predicate);
 
-    public async Task SoftDeleteAsync(T entity)
+    public Task SoftDeleteAsync(T entity)
     {
         if (entity is BaseEntity baseEntity)
         {
             baseEntity.SoftDelete();
             _dbSet.Update(entity);
-            await _context.SaveChangesAsync();
         }
+        return Task.CompletedTask;
     }
 }

@@ -32,7 +32,7 @@ public class ProjectRepository : GenericRepository<Domain.Entity.Project>, IProj
     public async Task AddMemberAsync(ProjectMember member)
     {
         _context.ProjectMembers.Add(member);
-        await _context.SaveChangesAsync();
+        await Task.CompletedTask;
     }
 
     public async Task RemoveMemberAsync(int projectId, int userId)
@@ -42,8 +42,8 @@ public class ProjectRepository : GenericRepository<Domain.Entity.Project>, IProj
         if (member != null)
         {
             _context.ProjectMembers.Remove(member);
-            await _context.SaveChangesAsync();
         }
+        await Task.CompletedTask;
     }
 
     public async Task<bool> IsMemberAsync(int projectId, int userId) =>

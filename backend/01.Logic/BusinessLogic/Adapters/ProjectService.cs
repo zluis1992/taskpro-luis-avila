@@ -14,6 +14,7 @@ public class ProjectService : IProjectService
     private readonly IUserRepository _userRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly ICommentRepository _commentRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public ProjectService(
@@ -21,12 +22,14 @@ public class ProjectService : IProjectService
         IUserRepository userRepository,
         ITaskRepository taskRepository,
         ICommentRepository commentRepository,
+        IUnitOfWork unitOfWork,
         IMapper mapper)
     {
         _projectRepository = projectRepository;
         _userRepository = userRepository;
         _taskRepository = taskRepository;
         _commentRepository = commentRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -57,6 +60,7 @@ public class ProjectService : IProjectService
 
         var created = await _projectRepository.AddAsync(project);
         await _projectRepository.AddMemberAsync(new ProjectMember { ProjectId = created.Id, UserId = ownerId });
+        await _unitOfWork.CompleteAsync();
 
         var detailed = await _projectRepository.GetByIdWithDetailsAsync(created.Id);
         return _mapper.Map<ProjectDto>(detailed!);
@@ -78,6 +82,7 @@ public class ProjectService : IProjectService
         project.UpdatedAt = DateTime.UtcNow;
 
         await _projectRepository.UpdateAsync(project);
+        await _unitOfWork.CompleteAsync();
         return _mapper.Map<ProjectDto>(project);
     }
 
@@ -99,6 +104,7 @@ public class ProjectService : IProjectService
 
         project.SoftDelete();
         await _projectRepository.UpdateAsync(project);
+        await _unitOfWork.CompleteAsync();
     }
 
     public async Task AddMemberAsync(int projectId, int memberId, int requesterId)
@@ -116,6 +122,7 @@ public class ProjectService : IProjectService
             throw new BusinessException("User is already a member of this project.");
 
         await _projectRepository.AddMemberAsync(new ProjectMember { ProjectId = projectId, UserId = memberId });
+        await _unitOfWork.CompleteAsync();
     }
 
     public async Task RemoveMemberAsync(int projectId, int memberId, int requesterId)
@@ -130,6 +137,7 @@ public class ProjectService : IProjectService
             throw new BusinessException("Cannot remove the project owner.");
 
         await _projectRepository.RemoveMemberAsync(projectId, memberId);
+        await _unitOfWork.CompleteAsync();
     }
 
     public async Task<IEnumerable<UserDto>> GetMembersAsync(int projectId, int userId)

@@ -16,12 +16,14 @@ namespace BusinessLogic.Adapters;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration;
 
-    public AuthService(IUserRepository userRepository, IMapper mapper, IConfiguration configuration)
+    public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IMapper mapper, IConfiguration configuration)
     {
         _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _configuration = configuration;
     }
@@ -43,6 +45,7 @@ public class AuthService : IAuthService
         {
             user.PasswordHash = HashPassword(password);
             await _userRepository.UpdateAsync(user);
+            await _unitOfWork.CompleteAsync();
         }
 
         var token = GenerateJwtToken(user);
@@ -72,6 +75,7 @@ public class AuthService : IAuthService
         user.PasswordHash = HashPassword(request.Password.Trim());
 
         var created = await _userRepository.AddAsync(user);
+        await _unitOfWork.CompleteAsync();
         return _mapper.Map<UserDto>(created);
     }
 

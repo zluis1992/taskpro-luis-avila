@@ -14,13 +14,15 @@ public class TaskService : ITaskService
     private readonly ITaskRepository _taskRepository;
     private readonly IProjectRepository _projectRepository;
     private readonly ICommentRepository _commentRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public TaskService(ITaskRepository taskRepository, IProjectRepository projectRepository, ICommentRepository commentRepository, IMapper mapper)
+    public TaskService(ITaskRepository taskRepository, IProjectRepository projectRepository, ICommentRepository commentRepository, IUnitOfWork unitOfWork, IMapper mapper)
     {
         _taskRepository = taskRepository;
         _projectRepository = projectRepository;
         _commentRepository = commentRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -51,6 +53,7 @@ public class TaskService : ITaskService
         task.Priority = (TaskPriority)request.Priority;
 
         var created = await _taskRepository.AddAsync(task);
+        await _unitOfWork.CompleteAsync();
         var detailed = await _taskRepository.GetByIdWithDetailsAsync(created.Id);
         return _mapper.Map<TaskDto>(detailed!);
     }
@@ -74,6 +77,7 @@ public class TaskService : ITaskService
         task.UpdatedAt = DateTime.UtcNow;
 
         await _taskRepository.UpdateAsync(task);
+        await _unitOfWork.CompleteAsync();
         var updated = await _taskRepository.GetByIdWithDetailsAsync(taskId);
         return _mapper.Map<TaskDto>(updated!);
     }
@@ -87,6 +91,7 @@ public class TaskService : ITaskService
         task.SoftDelete();
         await _taskRepository.UpdateAsync(task);
         await _commentRepository.SoftDeleteByTaskAsync(taskId);
+        await _unitOfWork.CompleteAsync();
     }
 
     private async Task EnsureProjectAccessAsync(int projectId, int userId)
